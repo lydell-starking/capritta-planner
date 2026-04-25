@@ -659,7 +659,7 @@ async function parseRecipe(){
   try{
     var res=await fetch('https://api.anthropic.com/v1/messages',{
       method:'POST',
-      headers:{'Content-Type':'application/json','anthropic-version':'2023-06-01','x-api-key':getApiKey()},
+      headers:{'Content-Type':'application/json','anthropic-version':'2023-06-01','anthropic-dangerous-direct-browser-access':'true','x-api-key':getApiKey()},
       body:JSON.stringify({model:'claude-sonnet-4-20250514',max_tokens:1200,
         system:'Parse a plain-text recipe into JSON. Respond ONLY with valid JSON no markdown. Schema: {"name":string,"category":"Main|Sauce|Topping|Side|Snack|Dessert|Drink|Component|Other","baseServings":number,"yieldText":string,"ingredients":[{"item":string,"amount":string,"unit":string,"note":string}],"method":[string],"makeAhead":string,"storage":string,"safetyTips":string}',
         messages:[{role:'user',content:'Parse this recipe:\n\n'+text}]})
@@ -795,7 +795,7 @@ function applyTasksUpdate(updates){
 async function runApiTest(){
   var thinking=appendMsg('chef','<span class="thinking">Testing API connection...</span>');
   try{
-    var headers={'Content-Type':'application/json','anthropic-version':'2023-06-01'};
+    var headers={'Content-Type':'application/json','anthropic-version':'2023-06-01','anthropic-dangerous-direct-browser-access':'true'};
     var k=getApiKey();if(k)headers['x-api-key']=k;
     var res=await fetch('https://api.anthropic.com/v1/messages',{
       method:'POST',headers:headers,
@@ -831,7 +831,7 @@ async function sendChat(){
     var messages=chatHistory.filter(function(m){return(m.role==='user'||m.role==='assistant')&&typeof m.content==='string'&&m.content.trim().length>0;});
     var res=await fetch('https://api.anthropic.com/v1/messages',{
       method:'POST',
-      headers:{'Content-Type':'application/json','anthropic-version':'2023-06-01','x-api-key':getApiKey()},
+      headers:{'Content-Type':'application/json','anthropic-version':'2023-06-01','anthropic-dangerous-direct-browser-access':'true','x-api-key':getApiKey()},
       body:JSON.stringify({model:'claude-sonnet-4-20250514',max_tokens:1500,system:buildSystemPrompt(),messages:messages})
     });
     var data=await res.json();
