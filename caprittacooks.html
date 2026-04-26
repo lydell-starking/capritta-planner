@@ -6,12 +6,13 @@
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="Capritta">
-<meta name="theme-color" content="#0a1628">
+<meta name="theme-color" content="#0a1628" media="(prefers-color-scheme: dark)"><meta name="theme-color" content="#f5f3ef" media="(prefers-color-scheme: light)">
 <title>Capritta Event Planner</title>
 <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
 <style>
-:root{--navy:#0a1628;--blue:#1a3a6b;--mid:#1e4d8c;--sky:#5b9bd5;--gold:#c9a84c;--cream:#f4f0e6;--sage:#1e6b3a;--rust:#8b2020;--ink:#1a1a1a;--muted:#8a9bb0;--border:#d0c9bb;--done-bg:rgba(255,255,255,0.03)}
-*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent;touch-action:manipulation}
+:root{--navy:#0a1628;--blue:#1a3a6b;--mid:#1e4d8c;--sky:#5b9bd5;--gold:#c9a84c;--cream:#f4f0e6;--sage:#1e6b3a;--rust:#8b2020;--ink:#1a1a1a;--muted:#8a9bb0;--border:#d0c9bb;--done-bg:rgba(255,255,255,0.03);--item-bg:var(--cream);--item-color:var(--ink);--item-note-color:#5a5240;--item-recipe-bg:var(--navy)}
+@media(prefers-color-scheme:light){:root{--navy:#f5f3ef;--blue:#e8e2d8;--mid:#d4c9b8;--sky:#2a6096;--gold:#8a6a1a;--cream:#1a1a1a;--sage:#1e6b3a;--rust:#8b2020;--ink:#1a1a1a;--muted:#6a6a6a;--border:#c0b8a8;--done-bg:rgba(0,0,0,0.04);--item-bg:#ffffff;--item-color:#1a1a1a;--item-note-color:#5a5240;--item-recipe-bg:#1a3a6b}}
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
 html,body{height:100%}
 body{background:var(--navy);color:var(--cream);font-family:'IBM Plex Mono',monospace;display:flex;flex-direction:column;overflow:hidden}
 .app-header{background:var(--navy);border-bottom:3px double var(--gold);padding:14px 16px 10px;flex-shrink:0;padding-top:max(14px,env(safe-area-inset-top))}
@@ -38,7 +39,11 @@ body{background:var(--navy);color:var(--cream);font-family:'IBM Plex Mono',monos
 .tag-soon{background:#2a0d0d;color:#f87171;border:1px solid #f87171}
 .tag-ahead{background:#0d1f38;color:var(--sky);border:1px solid var(--sky)}
 .items{display:flex;flex-direction:column;gap:3px}
-.item{display:flex;align-items:flex-start;gap:12px;padding:11px 13px;background:var(--cream);border:1px solid var(--border);border-left:3px solid var(--border);border-radius:2px;transition:all 0.2s;color:var(--ink)}
+.swipe-wrap{position:relative;overflow:hidden;border-radius:2px}
+.swipe-hint-left{position:absolute;right:0;top:0;bottom:0;width:80px;background:#1e6b3a;display:flex;align-items:center;justify-content:center;color:#fff;font-size:0.75rem;font-family:'IBM Plex Mono',monospace;letter-spacing:0.05em;opacity:0;transition:opacity 0.15s;pointer-events:none}
+.swipe-hint-right{position:absolute;left:0;top:0;bottom:0;width:80px;background:#8b2020;display:flex;align-items:center;justify-content:center;color:#fff;font-size:0.75rem;font-family:'IBM Plex Mono',monospace;letter-spacing:0.05em;opacity:0;transition:opacity 0.15s;pointer-events:none}
+.swipe-content{position:relative;transition:transform 0.2s ease;will-change:transform}
+.item{display:flex;align-items:flex-start;gap:12px;padding:11px 13px;background:var(--item-bg);border:1px solid var(--border);border-left:3px solid var(--border);border-radius:2px;transition:all 0.2s;color:var(--item-color);touch-action:pan-y}
 .cb:active{transform:scale(0.9)}
 .item.done{background:var(--done-bg);border-color:transparent;border-left-color:transparent;padding-top:4px;padding-bottom:4px;opacity:0.38}
 .item.done .item-text{text-decoration:line-through;color:var(--sky);font-size:0.75rem}
@@ -60,7 +65,7 @@ body{background:var(--navy);color:var(--cream);font-family:'IBM Plex Mono',monos
 .shop-filter-btn{font-family:'IBM Plex Mono',monospace;font-size:0.58rem;letter-spacing:0.1em;text-transform:uppercase;padding:5px 12px;border-radius:2px;cursor:pointer;border:1px solid var(--blue);background:none;color:var(--muted);transition:all 0.15s}
 .shop-filter-btn.active{background:var(--gold);color:var(--navy);border-color:var(--gold);font-weight:600}
 .shop-cat-label{font-family:'Bebas Neue',sans-serif;font-size:0.85rem;letter-spacing:0.12em;color:var(--sky);margin:18px 0 6px}
-.shop-item{display:flex;align-items:center;gap:12px;padding:10px 13px;background:var(--cream);border:1px solid var(--border);border-left:3px solid var(--border);border-radius:2px;color:var(--ink);margin-bottom:3px;transition:all 0.2s}
+.shop-item{display:flex;align-items:center;gap:12px;padding:10px 13px;background:var(--item-bg);border:1px solid var(--border);border-left:3px solid var(--border);border-radius:2px;color:var(--item-color);margin-bottom:3px;transition:all 0.2s}
 .shop-item .cb:active{transform:scale(0.9)}
 .shop-item.checked{background:var(--done-bg);border-color:transparent;border-left-color:transparent;opacity:0.35;padding-top:4px;padding-bottom:4px}
 .shop-item.checked .shop-item-name{text-decoration:line-through;color:var(--sky);font-size:0.75rem}
@@ -164,13 +169,21 @@ body{background:var(--navy);color:var(--cream);font-family:'IBM Plex Mono',monos
   <div class="progress-label" id="progress-label">0 of 0 tasks complete</div>
 </header>
 <div class="main" id="main">
-  <div class="tab active" id="tab-checklist"><div id="checklist-body"></div></div>
+  <div class="tab active" id="tab-checklist">
+    <div style="display:flex;justify-content:flex-end;margin-bottom:8px">
+      <button onclick="showDaySummary()" style="background:none;border:1px solid var(--blue);color:var(--muted);font-family:'IBM Plex Mono',monospace;font-size:0.6rem;letter-spacing:0.1em;padding:5px 12px;border-radius:2px;cursor:pointer;text-transform:uppercase">&#9776; Day Summary</button>
+    </div>
+    <div id="checklist-body"></div>
+  </div>
   <div class="tab" id="tab-shopping">
-    <div class="shop-filters">
-      <button class="shop-filter-btn active" onclick="shopFilter('all',this)">All</button>
-      <button class="shop-filter-btn" onclick="shopFilter('ahead',this)">Buy Ahead</button>
-      <button class="shop-filter-btn" onclick="shopFilter('fresh',this)">Buy Fresh</button>
-      <button class="shop-filter-btn" onclick="shopFilter('sourced',this)">Sourced</button>
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px">
+      <div class="shop-filters" style="margin-bottom:0;flex:1">
+        <button class="shop-filter-btn active" onclick="shopFilter('all',this)">All</button>
+        <button class="shop-filter-btn" onclick="shopFilter('ahead',this)">Buy Ahead</button>
+        <button class="shop-filter-btn" onclick="shopFilter('fresh',this)">Buy Fresh</button>
+        <button class="shop-filter-btn" onclick="shopFilter('sourced',this)">Sourced</button>
+      </div>
+      <button onclick="openAddItem()" style="background:var(--gold);color:var(--navy);border:none;font-family:'Bebas Neue',sans-serif;font-size:1.1rem;width:36px;height:36px;border-radius:50%;cursor:pointer;flex-shrink:0;margin-left:8px;line-height:1">+</button>
     </div>
     <div class="shop-stats" id="shop-stats"></div>
     <div id="shopping-body"></div>
@@ -178,7 +191,10 @@ body{background:var(--navy);color:var(--cream);font-family:'IBM Plex Mono',monos
   <div class="tab" id="tab-recipes">
     <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px">
       <div style="font-family:'Bebas Neue',sans-serif;font-size:1rem;letter-spacing:0.1em;color:var(--gold)">RECIPE LIBRARY</div>
-      <button class="btn-ghost" onclick="toggleAddRecipe()" id="add-recipe-toggle">+ Add Recipe</button>
+      <div style="display:flex;gap:6px">
+        <button class="btn-ghost" onclick="shareShoppingList()" style="color:var(--sky);border-color:var(--sky)">&#8679; List</button>
+        <button class="btn-ghost" onclick="toggleAddRecipe()" id="add-recipe-toggle">+ Add</button>
+      </div>
     </div>
     <div class="add-recipe-panel" id="add-recipe-panel">
       <label style="font-size:0.6rem;color:var(--muted);letter-spacing:0.1em;text-transform:uppercase;display:block;margin-bottom:5px">Paste recipe text -- AI will parse it (requires API key)</label>
@@ -218,7 +234,7 @@ body{background:var(--navy);color:var(--cream);font-family:'IBM Plex Mono',monos
     <button class="rd-back" onclick="closeRecipeDetail()">&#8592; Back</button>
     <div class="rd-title" id="rd-title"></div>
     <button class="rd-btn" onclick="openPhotoPicker()">Photo</button>
-    <button class="rd-btn" id="rd-edit-btn" style="color:var(--sky);border-color:var(--sky)" onclick="openRecipeEdit()">Edit</button>
+    <button class="rd-btn" onclick="shareRecipe(currentRecipeId)" style="color:var(--sky);border-color:var(--sky)">&#8679; Share</button><button class="rd-btn" id="rd-edit-btn" style="color:var(--sky);border-color:var(--sky)" onclick="openRecipeEdit()">Edit</button>
   </div>
   <div class="rd-body" id="rd-body"></div>
 </div>
@@ -228,6 +244,32 @@ body{background:var(--navy);color:var(--cream);font-family:'IBM Plex Mono',monos
   <button class="btn-gold" style="width:100%;padding:12px;font-size:1rem;margin-bottom:10px" onclick="newEventViaChat()">+ New Event via Chef</button>
   <button class="btn-ghost" style="display:block;margin:0 auto" onclick="closeEvOverlay()">Close</button>
 </div>
+<div class="overlay" id="add-item-overlay">
+  <h2>Add Shopping Item</h2>
+  <label class="edit-label">Item Name</label>
+  <input class="edit-input" type="text" id="add-item-name" placeholder="e.g. Fresh rosemary">
+  <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:10px">
+    <div><label class="edit-label">Quantity</label><input class="edit-input" type="text" inputmode="decimal" id="add-item-qty" placeholder="e.g. 2"></div>
+    <div><label class="edit-label">Unit</label><input class="edit-input" type="text" id="add-item-unit" placeholder="lbs, each, cups"></div>
+  </div>
+  <label class="edit-label">Category</label>
+  <select class="edit-input" id="add-item-when">
+    <option value="Buy Ahead">Buy Ahead</option>
+    <option value="Buy Fresh">Buy Fresh</option>
+    <option value="Already Sourced">Already Sourced</option>
+  </select>
+  <div style="display:flex;gap:10px;margin-top:20px">
+    <button onclick="saveAddItem()" style="background:var(--gold);color:var(--navy);border:none;font-family:'Bebas Neue',sans-serif;font-size:1rem;letter-spacing:0.08em;padding:12px 24px;border-radius:2px;cursor:pointer;flex:1">Add Item</button>
+    <button onclick="closeAddItem()" class="btn-ghost">Cancel</button>
+  </div>
+</div>
+
+<div class="overlay" id="summary-overlay">
+  <h2>Day Summary</h2>
+  <div id="summary-body" style="font-family:'IBM Plex Mono',monospace;font-size:0.82rem;line-height:1.8;color:var(--cream)"></div>
+  <button class="btn-ghost" style="display:block;margin:20px auto 0" onclick="document.getElementById('summary-overlay').classList.remove('open')">Close</button>
+</div>
+
 <div class="overlay" id="api-overlay">
   <h2>API Key Setup</h2>
   <div style="font-family:'IBM Plex Mono',monospace;font-size:0.72rem;color:var(--sky);margin-bottom:20px;line-height:1.7">To use the Chef AI, enter your Anthropic API key.<br>Get one free at <strong style="color:var(--gold)">console.anthropic.com</strong><br>Free tier works fine for this app.</div>
@@ -318,7 +360,7 @@ function renderTaskRow(t,state,isOverdue,isPast,isCurrent) {
   inner+='<div class="item-text">'+escH(t.title)+'</div>';
   if(t.note&&!done)inner+='<div class="item-note">'+escH(t.note)+'</div>';
   if(!done&&t.recipe){var r=recipes.find(function(x){return x.id===t.recipe;});if(r)inner+='<div><button class="item-recipe-btn" onclick="event.stopPropagation();openRecipeDetail(\''+r.id+'\')">Recipe: '+escH(r.name)+'</button></div>';}
-  return '<div class="'+cls+'">'+'<div class="cb" onclick="toggleTask('+t._i+')"><span class="ck">&#10003;</span></div><div style="flex:1">'+inner+'</div></div>';
+  return '<div class="swipe-wrap" id="sw-'+t._i+'" data-idx="'+t._i+'" ontouchstart="swipeStart(event,'+t._i+')" ontouchmove="swipeMove(event,'+t._i+')" ontouchend="swipeEnd(event,'+t._i+')"><div class="swipe-hint-left" id="shl-'+t._i+'">&#10003; Done</div><div class="swipe-hint-right" id="shr-'+t._i+'">&#8617; Undo</div><div class="swipe-content" id="sc-'+t._i+'"><div class="'+cls+'">'+'<div class="cb" onclick="toggleTask('+t._i+')"><span class="ck">&#10003;</span></div><div style="flex:1">'+inner+'</div></div></div></div>';
 }
 
 function yahLine() {
@@ -446,12 +488,39 @@ function renderShopping() {
 
 function changeShopCategory(id, event) {
   event.stopPropagation();
+  event.preventDefault();
   var ev = events[activeEventIdx];
   var item = ev.shoppingList && ev.shoppingList.find(function(i){ return i.id === id; });
   if (!item) return;
-  var cats = ['Buy Ahead', 'Buy Fresh', 'Already Sourced'];
-  var current = cats.indexOf(item.when);
-  item.when = cats[(current + 1) % cats.length];
+
+  // Remove any existing popup
+  var existing = document.getElementById('cat-popup');
+  if (existing) existing.remove();
+
+  // Build popup
+  var popup = document.createElement('div');
+  popup.id = 'cat-popup';
+  popup.style.cssText = 'position:fixed;inset:0;background:rgba(10,22,40,0.85);z-index:400;display:flex;align-items:flex-end;justify-content:center';
+  popup.innerHTML =
+    '<div style="background:#1a3a6b;border:1px solid #c9a84c;border-radius:4px 4px 0 0;width:100%;max-width:480px;padding:20px 16px 32px">' +
+    '<div style="font-family:\'IBM Plex Mono\',monospace;font-size:0.6rem;letter-spacing:0.15em;text-transform:uppercase;color:#8a9bb0;margin-bottom:14px">Move <strong style="color:#f4f0e6">' + item.item + '</strong> to:</div>' +
+    '<div style="display:flex;flex-direction:column;gap:8px">' +
+    '<button onclick="setCat(\'' + id + '\',\'Buy Ahead\')" style="background:'+(item.when==='Buy Ahead'?'#c9a84c':'#0a1628')+';color:'+(item.when==='Buy Ahead'?'#0a1628':'#f4f0e6')+';border:1px solid #c9a84c;font-family:\'IBM Plex Mono\',monospace;font-size:0.85rem;padding:12px;border-radius:2px;cursor:pointer">Buy Ahead</button>' +
+    '<button onclick="setCat(\'' + id + '\',\'Buy Fresh\')" style="background:'+(item.when==='Buy Fresh'?'#52be80':'#0a1628')+';color:'+(item.when==='Buy Fresh'?'#0a1628':'#f4f0e6')+';border:1px solid #52be80;font-family:\'IBM Plex Mono\',monospace;font-size:0.85rem;padding:12px;border-radius:2px;cursor:pointer">Buy Fresh</button>' +
+    '<button onclick="setCat(\'' + id + '\',\'Already Sourced\')" style="background:'+(item.when==='Already Sourced'?'#52be80':'#0a1628')+';color:'+(item.when==='Already Sourced'?'#0a1628':'#f4f0e6')+';border:1px solid #52be80;font-family:\'IBM Plex Mono\',monospace;font-size:0.85rem;padding:12px;border-radius:2px;cursor:pointer">Already Sourced</button>' +
+    '<button onclick="document.getElementById(\'cat-popup\').remove()" style="background:none;border:1px solid #1e4d8c;color:#8a9bb0;font-family:\'IBM Plex Mono\',monospace;font-size:0.8rem;padding:10px;border-radius:2px;cursor:pointer;margin-top:4px">Cancel</button>' +
+    '</div></div>';
+  popup.addEventListener('click', function(e){ if(e.target===popup) popup.remove(); });
+  document.body.appendChild(popup);
+}
+
+function setCat(id, cat) {
+  var existing = document.getElementById('cat-popup');
+  if (existing) existing.remove();
+  var ev = events[activeEventIdx];
+  var item = ev.shoppingList && ev.shoppingList.find(function(i){ return i.id === id; });
+  if (!item) return;
+  item.when = cat;
   saveEvents();
   renderShopping();
 }
@@ -826,6 +895,207 @@ async function runApiTest(){
   }catch(e){
     console.error('API test error:',e);
     thinking.innerHTML='<div class="msg-sender">&#9733; Chef</div><span style="color:#f87171">Network error: '+escH(e.message||String(e))+'</span>';
+  }
+}
+
+
+
+// ── Add Shopping Item ─────────────────────────
+function openAddItem() {
+  document.getElementById('add-item-overlay').classList.add('open');
+  setTimeout(function(){ document.getElementById('add-item-name').focus(); }, 100);
+}
+function closeAddItem() {
+  document.getElementById('add-item-overlay').classList.remove('open');
+  document.getElementById('add-item-name').value = '';
+  document.getElementById('add-item-qty').value = '';
+  document.getElementById('add-item-unit').value = '';
+}
+function saveAddItem() {
+  var name = document.getElementById('add-item-name').value.trim();
+  if (!name) { document.getElementById('add-item-name').style.borderColor='#f87171'; return; }
+  var qty  = document.getElementById('add-item-qty').value.trim();
+  var unit = document.getElementById('add-item-unit').value.trim();
+  var when = document.getElementById('add-item-when').value;
+  var ev = events[activeEventIdx];
+  if (!ev.shoppingList) ev.shoppingList = [];
+  ev.shoppingList.push({id: uid(), item: name, totalAmount: qty, unit: unit, category: 'Other', when: when, checked: false});
+  saveEvents();
+  closeAddItem();
+  renderShopping();
+}
+
+// ── Day Summary ───────────────────────────────
+function showDaySummary() {
+  var ev = events[activeEventIdx];
+  if (!ev || !ev.timeline) return;
+  var state = getCheckState();
+  var now = new Date();
+  var today = [], done = [], overdue = [], upcoming = [];
+
+  ev.timeline.forEach(function(t, i) {
+    var tag = getDayTag(t.day);
+    var lbl = (t.time ? fmtTime(t.time) + ' -- ' : '') + t.title;
+    if (state[i]) done.push(lbl);
+    else if (tag === 'today') today.push(lbl);
+    else if (tag === 'done') overdue.push(lbl);
+    else upcoming.push(lbl);
+  });
+
+  var html = '';
+  if (done.length) {
+    html += '<div style="color:#52be80;font-size:0.75rem;letter-spacing:0.12em;text-transform:uppercase;font-weight:600;margin-bottom:6px">COMPLETED (' + done.length + ')</div>';
+    html += done.map(function(t){ return '<div style="color:#52be80;padding:3px 0;border-bottom:1px solid rgba(82,190,128,0.15)">&#10003; ' + t + '</div>'; }).join('');
+    html += '<div style="height:16px"></div>';
+  }
+  if (overdue.length) {
+    html += '<div style="color:#f87171;font-size:0.75rem;letter-spacing:0.12em;text-transform:uppercase;font-weight:600;margin-bottom:6px">OVERDUE (' + overdue.length + ')</div>';
+    html += overdue.map(function(t){ return '<div style="color:#f87171;padding:3px 0;border-bottom:1px solid rgba(248,113,113,0.15)">&#9888; ' + t + '</div>'; }).join('');
+    html += '<div style="height:16px"></div>';
+  }
+  if (today.length) {
+    html += '<div style="color:var(--gold);font-size:0.75rem;letter-spacing:0.12em;text-transform:uppercase;font-weight:600;margin-bottom:6px">STILL TODAY (' + today.length + ')</div>';
+    html += today.map(function(t){ return '<div style="color:var(--cream);padding:3px 0;border-bottom:1px solid rgba(201,168,76,0.15)">&#9702; ' + t + '</div>'; }).join('');
+    html += '<div style="height:16px"></div>';
+  }
+  if (!overdue.length && !today.length && done.length) {
+    html += '<div style="color:#52be80;font-size:1rem;text-align:center;padding:20px 0">All caught up! &#127881;</div>';
+  }
+  html += '<div style="color:var(--muted);font-size:0.7rem;margin-top:8px;text-align:right">' + done.length + ' of ' + ev.timeline.length + ' total tasks complete</div>';
+
+  document.getElementById('summary-body').innerHTML = html;
+  document.getElementById('summary-overlay').classList.add('open');
+}
+
+// ── Share Shopping List ───────────────────────
+function shareShoppingList() {
+  var ev = events[activeEventIdx];
+  if (!ev || !ev.shoppingList) return;
+  var remaining = ev.shoppingList.filter(function(i){ return !i.checked && i.when !== 'Already Sourced'; });
+  if (!remaining.length) { alert('Nothing left to buy!'); return; }
+  var lines = [];
+  lines.push(ev.name + ' -- Shopping List');
+  lines.push('');
+  var ahead = remaining.filter(function(i){ return i.when === 'Buy Ahead'; });
+  var fresh = remaining.filter(function(i){ return i.when === 'Buy Fresh'; });
+  if (ahead.length) {
+    lines.push('BUY AHEAD:');
+    ahead.forEach(function(i){ lines.push('- ' + i.item + (i.totalAmount ? ' (' + i.totalAmount + ' ' + i.unit + ')' : '')); });
+    lines.push('');
+  }
+  if (fresh.length) {
+    lines.push('BUY FRESH:');
+    fresh.forEach(function(i){ lines.push('- ' + i.item + (i.totalAmount ? ' (' + i.totalAmount + ' ' + i.unit + ')' : '')); });
+  }
+  var text = lines.join('\n');
+  if (navigator.share) {
+    navigator.share({ title: ev.name + ' Shopping List', text: text });
+  } else if (navigator.clipboard) {
+    navigator.clipboard.writeText(text).then(function(){ alert('Shopping list copied to clipboard!'); });
+  } else {
+    var ta = document.createElement('textarea');
+    ta.value = text; document.body.appendChild(ta); ta.select();
+    document.execCommand('copy'); document.body.removeChild(ta);
+    alert('Shopping list copied to clipboard!');
+  }
+}
+
+// ── Share Recipe ──────────────────────────────
+function shareRecipe(id) {
+  var r = recipes.find(function(x){ return x.id === id; });
+  if (!r) return;
+  var lines = [];
+  lines.push(r.name.toUpperCase());
+  lines.push('Serves: ' + r.baseServings + (r.yieldText ? ' -- ' + r.yieldText : ''));
+  lines.push('');
+  if (r.ingredients && r.ingredients.length) {
+    lines.push('INGREDIENTS:');
+    r.ingredients.forEach(function(ing){
+      var s = '- ' + ing.item;
+      if (ing.amount) s += ': ' + ing.amount + ' ' + (ing.unit||'');
+      if (ing.note) s += ' (' + ing.note + ')';
+      lines.push(s);
+    });
+    lines.push('');
+  }
+  if (r.method && r.method.length) {
+    lines.push('METHOD:');
+    r.method.forEach(function(step, i){ lines.push((i+1) + '. ' + step); });
+    lines.push('');
+  }
+  if (r.makeAhead) { lines.push('MAKE AHEAD:'); lines.push(r.makeAhead); lines.push(''); }
+  if (r.safetyTips) { lines.push('FOOD SAFETY:'); lines.push(r.safetyTips); }
+  var text = lines.join('\n');
+  if (navigator.share) {
+    navigator.share({ title: r.name, text: text });
+  } else if (navigator.clipboard) {
+    navigator.clipboard.writeText(text).then(function(){ alert('Recipe copied to clipboard!'); });
+  } else {
+    var ta = document.createElement('textarea');
+    ta.value = text; document.body.appendChild(ta); ta.select();
+    document.execCommand('copy'); document.body.removeChild(ta);
+    alert('Recipe copied to clipboard!');
+  }
+}
+
+// Swipe gesture state
+var swipeState = {};
+
+function swipeStart(e, idx) {
+  var touch = e.touches[0];
+  swipeState[idx] = {startX: touch.clientX, startY: touch.clientY, moved: false};
+}
+
+function swipeMove(e, idx) {
+  if (!swipeState[idx]) return;
+  var touch = e.touches[0];
+  var dx = touch.clientX - swipeState[idx].startX;
+  var dy = touch.clientY - swipeState[idx].startY;
+  // Only handle horizontal swipes
+  if (Math.abs(dy) > Math.abs(dx) && !swipeState[idx].moved) return;
+  swipeState[idx].moved = true;
+  e.preventDefault();
+  var sc = document.getElementById('sc-'+idx);
+  var shl = document.getElementById('shl-'+idx);
+  var shr = document.getElementById('shr-'+idx);
+  if (!sc) return;
+  var clamped = Math.max(-100, Math.min(100, dx));
+  sc.style.transform = 'translateX('+clamped+'px)';
+  if (dx < -20 && shl) shl.style.opacity = Math.min(1, Math.abs(dx)/80);
+  if (dx > 20 && shr) shr.style.opacity = Math.min(1, dx/80);
+  if (dx >= 0 && shl) shl.style.opacity = 0;
+  if (dx <= 0 && shr) shr.style.opacity = 0;
+}
+
+function swipeEnd(e, idx) {
+  if (!swipeState[idx] || !swipeState[idx].moved) { delete swipeState[idx]; return; }
+  var touch = e.changedTouches[0];
+  var dx = touch.clientX - swipeState[idx].startX;
+  var sc = document.getElementById('sc-'+idx);
+  var shl = document.getElementById('shl-'+idx);
+  var shr = document.getElementById('shr-'+idx);
+  delete swipeState[idx];
+  if (sc) sc.style.transform = 'translateX(0)';
+  if (shl) shl.style.opacity = 0;
+  if (shr) shr.style.opacity = 0;
+  if (dx < -60) {
+    // Swipe left = complete
+    var state = getCheckState();
+    if (!state[idx]) {
+      state[idx] = true;
+      var ts = getTaskTs(); ts[idx] = Date.now(); localStorage.setItem(TS_KEY, JSON.stringify(ts));
+      if (navigator.vibrate) navigator.vibrate(30);
+      saveCheckState(state); renderChecklist();
+    }
+  } else if (dx > 60) {
+    // Swipe right = uncomplete
+    var state = getCheckState();
+    if (state[idx]) {
+      state[idx] = false;
+      var ts = getTaskTs(); delete ts[idx]; localStorage.setItem(TS_KEY, JSON.stringify(ts));
+      if (navigator.vibrate) navigator.vibrate(20);
+      saveCheckState(state); renderChecklist();
+    }
   }
 }
 
