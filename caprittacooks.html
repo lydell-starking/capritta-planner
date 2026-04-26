@@ -437,11 +437,23 @@ function renderShopping() {
         )+
         '<span class="shop-item-name">'+item.item+'</span>'+
         (amt?'<span class="shop-item-amt">'+amt+'</span>':'')+
-        '<span class="shop-when '+wc+'">'+wl+'</span></div>';
+        '<span class="shop-when '+wc+'" onclick="changeShopCategory(\''+item.id+'\', event)" style="cursor:pointer" title="Tap to change category">'+wl+' &#8635;</span></div>';
     });
   });
   if(!html)html='<div style="color:var(--muted);font-size:0.78rem;text-align:center;padding:40px 0">No items.</div>';
   document.getElementById('shopping-body').innerHTML=html;
+}
+
+function changeShopCategory(id, event) {
+  event.stopPropagation();
+  var ev = events[activeEventIdx];
+  var item = ev.shoppingList && ev.shoppingList.find(function(i){ return i.id === id; });
+  if (!item) return;
+  var cats = ['Buy Ahead', 'Buy Fresh', 'Already Sourced'];
+  var current = cats.indexOf(item.when);
+  item.when = cats[(current + 1) % cats.length];
+  saveEvents();
+  renderShopping();
 }
 
 function shopFilter(f,btn){
@@ -902,27 +914,27 @@ function seedData(){
   events=[{id:uid(),name:'Capritta Elevated Bar B Q',date:'2026-04-22',time:'17:00',guests:125,venue:'West Melbourne, FL',timeline:tl,shoppingList:sl}];
   
   recipes=[
-    {id:'r-pulled-pork',name:'Pulled Pork Sliders',category:'Main',type:'lydell',baseServings:125,yieldText:'~150-190 sliders',
-     ingredients:[{item:'Pork butts',amount:'4',unit:'each',note:'8-10 lbs each, fat cap up'},{item:'Hawaiian rolls',amount:'11',unit:'packs',note:'packs of 12'},{item:"Lydell's rub",amount:'',unit:'--',note:'own recipe'}],
+    {id:'r-pulled-pork',name:'Pulled Pork Sliders',category:'Main',type:'lydell',baseServings:25,yieldText:'1 butt = 1 pan = ~25 servings',
+     ingredients:[{item:'Pork butt',amount:'1',unit:'each',note:'8-10 lbs, fat cap up'},{item:"Lydell's rub",amount:'',unit:'to taste',note:'own recipe'},{item:'Hawaiian rolls',amount:'3',unit:'packs of 12',note:'per butt'}],
      method:["Apply Lydell's rub to all pork butts.",'Start Traeger at 225F Tuesday 10pm, fat cap up.','Check hopper Wednesday 4am.','Bump Traeger to 275F at 10am.','Pull at 203-205F internal.','Wrap in butcher paper. Rest in cooler 1-2 hrs minimum.','Shred at 3pm. Load into chafing dish at 4pm.'],
      makeAhead:"Rub Saturday/Sunday. Start Traeger Tuesday 10pm.",storage:'Hold above 140F in chafing dish.',safetyTips:'Pull at 203-205F. Hot hold above 140F. Do not leave at room temp.'},
-    {id:'r-cajun-peanuts',name:'Cajun Boiled Peanuts',category:'Snack',type:'lydell',baseServings:125,yieldText:'~125 cups',
+    {id:'r-cajun-peanuts',name:'Cajun Boiled Peanuts',category:'Snack',type:'lydell',baseServings:50,yieldText:'1 can = ~50 servings',
      ingredients:[{item:'Boiled peanuts',amount:'1',unit:'cans (#10)',note:'drained'},{item:'Water',amount:'946',unit:'ml',note:'4 cups'},{item:'Old Bay',amount:'45',unit:'g',note:'3 tbsp'},{item:'Cayenne',amount:'2',unit:'g',note:'1 tsp'},{item:'Smoked paprika',amount:'7',unit:'g',note:'1 tbsp'},{item:'Garlic cloves',amount:'6',unit:'each',note:'smashed'},{item:'Bay leaves',amount:'3',unit:'each',note:''},{item:'Salt',amount:'34',unit:'g',note:'2 tbsp'},{item:'Hot sauce',amount:'15',unit:'ml',note:'Crystal or Tabasco'}],
      method:['Simmer brine 10 min to bloom spices.','Add drained peanuts. Simmer 30-45 min.','Transfer to slow cooker on warm. Serve in small cups.'],
      makeAhead:'Make Sunday. Refrigerate in brine. Reheat Wednesday 2pm.',storage:'Hold above 140F.',safetyTips:'Reheat to 165F. Hold above 140F.'},
-    {id:'r-baked-beans',name:'Bourbon Baked Bean Trio',category:'Side',type:'lydell',baseServings:125,yieldText:'~18-20 quarts',
-     ingredients:[{item:'Navy beans',amount:'2',unit:'cans (#10)',note:'drained'},{item:'Black beans',amount:'2',unit:'cans (#10)',note:'drained'},{item:'Pinto beans',amount:'2',unit:'cans (#10)',note:'drained'},{item:'Thick cut bacon',amount:'603',unit:'g',note:'1.33 lbs diced'},{item:'Yellow onion',amount:'1.33',unit:'cups',note:'diced'},{item:'Garlic cloves',amount:'4',unit:'each',note:'minced'},{item:'Bourbon',amount:'314',unit:'ml',note:'1.33 cups'},{item:'Ketchup',amount:'473',unit:'ml',note:'2 cups'},{item:'Brown sugar',amount:'200',unit:'g',note:'1 cup'},{item:'Apple cider vinegar',amount:'157',unit:'ml',note:'2/3 cup'},{item:'Yellow mustard',amount:'157',unit:'ml',note:'2/3 cup'},{item:'Worcestershire',amount:'15',unit:'ml',note:'1 tbsp'},{item:'Smoked paprika',amount:'7',unit:'g',note:'1 tbsp'},{item:'Black pepper',amount:'5',unit:'g',note:'2/3 tbsp'},{item:'Salt',amount:'5',unit:'g',note:'2/3 tbsp'}],
+    {id:'r-baked-beans',name:'Bourbon Baked Bean Trio',category:'Side',type:'lydell',baseServings:15,yieldText:'6 standard cans (2 of each) = ~15 servings',
+     ingredients:[{item:'Navy beans',amount:'2',unit:'cans (15oz)',note:'drained'},{item:'Black beans',amount:'2',unit:'cans (15oz)',note:'drained'},{item:'Pinto beans',amount:'2',unit:'cans (15oz)',note:'drained'},{item:'Thick cut bacon',amount:'0.5',unit:'lbs (227g)',note:'diced'},{item:'Yellow onion',amount:'0.5',unit:'cup (118ml)',note:'diced'},{item:'Garlic cloves',amount:'2',unit:'each',note:'minced'},{item:'Bourbon',amount:'0.5',unit:'cup (118ml)',note:''},{'item':'Ketchup','amount':'0.75','unit':'cup (177ml)','note':''},{'item':'Brown sugar','amount':'0.375','unit':'cup (75g)','note':''},{'item':'Apple cider vinegar','amount':'0.25','unit':'cup (59ml)','note':''},{'item':'Yellow mustard','amount':'0.25','unit':'cup (59ml)','note':''},{'item':'Worcestershire','amount':'2','unit':'tsp (10ml)','note':''},{'item':'Smoked paprika','amount':'1.5','unit':'tsp (4g)','note':''},{'item':'Black pepper','amount':'1','unit':'tsp (3g)','note':''},{'item':'Salt','amount':'1','unit':'tsp (3g)','note':''}],
      method:['Render diced bacon. Remove, leave drippings.','Cook onion until soft. Add garlic 1 min.','Deglaze with bourbon. Add sauce ingredients. Simmer.','Fold in all 6 cans of beans gently.','Bake uncovered 325F 1.5-2 hrs until thick and sticky.'],
      makeAhead:'Make Monday. Best 1-2 days ahead.',storage:'Reheat to 165F. Hold above 140F.',safetyTips:'Reheat to 165F.'},
-    {id:'r-watermelon',name:'Watermelon & Feta Salad',category:'Side',type:'lydell',baseServings:125,yieldText:'~1 large watermelon',
-     ingredients:[{item:'Seedless watermelon',amount:'1',unit:'each',note:'cut day of only'},{item:'Feta cheese',amount:'603',unit:'g',note:'1.33 lbs crumbled'},{item:'Fresh mint',amount:'237',unit:'ml',note:'1 cup'},{item:'Fresh lime juice',amount:'157',unit:'ml',note:'2/3 cup'},{item:'Lime zest',amount:'1.33',unit:'each',note:'tbsp'},{item:'Olive oil',amount:'44',unit:'ml',note:'3 tbsp'},{item:'Chili flake',amount:'1',unit:'g',note:'2/3 tsp'},{item:'Flaky sea salt',amount:'5',unit:'g',note:'1 tsp'},{item:'Honey',amount:'21',unit:'ml',note:'1 tbsp'},{item:'Cucumber',amount:'1',unit:'each',note:'thinly sliced'}],
+    {id:'r-watermelon',name:'Watermelon & Feta Salad',category:'Side',type:'lydell',baseServings:75,yieldText:'1 large watermelon = ~75 servings',
+     ingredients:[{item:'Seedless watermelon',amount:'1',unit:'each',note:'cut day of only'},{item:'Feta cheese',amount:'907',unit:'g',note:'2 lbs crumbled'},{item:'Fresh mint',amount:'237',unit:'ml',note:'1 cup'},{item:'Fresh lime juice',amount:'157',unit:'ml',note:'2/3 cup'},{item:'Lime zest',amount:'1.33',unit:'each',note:'tbsp'},{item:'Olive oil',amount:'44',unit:'ml',note:'3 tbsp'},{item:'Chili flake',amount:'1',unit:'g',note:'2/3 tsp'},{item:'Flaky sea salt',amount:'5',unit:'g',note:'1 tsp'},{item:'Honey',amount:'21',unit:'ml',note:'1 tbsp'},{item:'Cucumber',amount:'1',unit:'each',note:'thinly sliced'}],
      method:['Make dressing: whisk lime juice, zest, olive oil, honey, chili flake, salt.','Cut watermelon DAY OF ONLY.','Layer: watermelon, cucumber. Drizzle dressing.','Top with feta, mint, chili flake, salt. Do NOT toss.'],
      makeAhead:'Dressing day before. Cut watermelon day of only.',storage:'Do not hold at room temp more than 2 hrs.',safetyTips:'Cut watermelon day of only.'},
-    {id:'r-potato-salad',name:'Smashed Potato Salad',category:'Side',type:'lydell',baseServings:125,yieldText:'~6-7 quarts',
-     ingredients:[{item:'Baby potatoes',amount:'11340',unit:'g',note:'25 lbs'},{item:'Olive oil',amount:'148',unit:'ml',note:'5/8 cup'},{item:'Mayonnaise',amount:'444',unit:'ml',note:'1.875 cups'},{item:'Chipotle in adobo',amount:'4',unit:'each',note:'minced'},{item:'Adobo sauce',amount:'30',unit:'ml',note:'2 tbsp'},{item:'Garlic cloves',amount:'5',unit:'each',note:'microplaned'},{item:'Lime juice',amount:'30',unit:'ml',note:'2 tbsp'},{item:'Smoked paprika',amount:'5',unit:'g',note:'2 tsp'},{item:'Salt and pepper',amount:'5',unit:'g',note:'2 tsp each'},{item:'Bacon',amount:'851',unit:'g',note:'1.875 lbs cooked crumbled'},{item:'Scallions',amount:'592',unit:'ml',note:'2.5 cups ~3 bunches'},{item:'Fresh chives',amount:'296',unit:'ml',note:'1.25 cups'}],
+    {id:'r-potato-salad',name:'Smashed Potato Salad',category:'Side',type:'lydell',baseServings:25,yieldText:'5 lbs = 1 pan = ~25 servings',
+     ingredients:[{item:'Baby potatoes',amount:'2268',unit:'g',note:'5 lbs'},{item:'Olive oil',amount:'148',unit:'ml',note:'5/8 cup'},{item:'Mayonnaise',amount:'444',unit:'ml',note:'1.875 cups'},{item:'Chipotle in adobo',amount:'4',unit:'each',note:'minced'},{item:'Adobo sauce',amount:'30',unit:'ml',note:'2 tbsp'},{item:'Garlic cloves',amount:'5',unit:'each',note:'microplaned'},{item:'Lime juice',amount:'30',unit:'ml',note:'2 tbsp'},{item:'Smoked paprika',amount:'5',unit:'g',note:'2 tsp'},{item:'Salt and pepper',amount:'5',unit:'g',note:'2 tsp each'},{item:'Bacon',amount:'851',unit:'g',note:'1.875 lbs cooked crumbled'},{item:'Scallions',amount:'592',unit:'ml',note:'2.5 cups ~3 bunches'},{item:'Fresh chives',amount:'296',unit:'ml',note:'1.25 cups'}],
      method:['Sunday: make chipotle aioli. Refrigerate overnight.','Tuesday: boil potatoes fork tender.','Smash on oiled pans. Roast 425F 25-30 min.','Wednesday 9am: re-crisp at 425F 15 min.','Wednesday 10am: toss with aioli, bacon, scallions. Top with chives.'],
      makeAhead:'Aioli Sunday. Potatoes Tuesday. Dress Wednesday.',storage:'Keep cold in Cambro. Mayo -- do not hold above 40F.',safetyTips:'Mayo-based. Keep below 40F. Max 2 hrs at room temp.'},
-    {id:'r-key-lime',name:'Key Lime Cups',category:'Dessert',type:'lydell',baseServings:125,yieldText:'125 x 4oz cups',
+    {id:'r-key-lime',name:'Key Lime Cups (Retired)',category:'Dessert',type:'lydell',baseServings:10,yieldText:'Use Nellie and Joes Key Lime Pie recipe instead',
      ingredients:[{item:'Egg yolks',amount:'24',unit:'each',note:'large'},{item:'Key lime juice',amount:'710',unit:'ml',note:"3 cups Nellie & Joe's"},{item:'Lime zest',amount:'4',unit:'each',note:'4 tbsp'},{item:'Sweetened condensed milk',amount:'4',unit:'cans (14oz)',note:''},{item:'Granulated sugar',amount:'400',unit:'g',note:'2 cups'},{item:'Unsalted butter',amount:'57',unit:'g',note:'4 tbsp cubed'},{item:'Graham crackers',amount:'1814',unit:'g',note:'4 lbs crushed'},{item:'Butter (base)',amount:'113',unit:'g',note:'1/2 cup melted'},{item:'Sugar (base)',amount:'25',unit:'g',note:'2 tbsp'},{item:'Heavy whipping cream',amount:'1893',unit:'ml',note:'2 quarts'},{item:'Powdered sugar',amount:'57',unit:'g',note:'1/2 cup'},{item:'Vanilla extract',amount:'5',unit:'ml',note:'1 tsp'},{item:'N2O cartridges',amount:'2',unit:'each',note:'for ISI canister'}],
      method:['Sunday: cook curd to 160F. Strain. Refrigerate.','Sunday: make graham base. Press into all 125 cups.','Monday: pipe curd 3/4 full. Refrigerate overnight.','Wed 4:30pm: load ISI canister. Charge 2 N2O.','Wed 4:45pm: dispense whipped cream. Lime zest garnish.'],
      makeAhead:'Curd Sunday. Fill cups Monday. Whipped cream Wednesday.',storage:'Refrigerate until service.',safetyTips:'Curd must reach 160F. Keep cups refrigerated.'},
@@ -961,22 +973,22 @@ function seedData(){
 
 
 // May 16 Event Data
-var MAY_TIMELINE = [{"day": "Saturday May 10 -- Week Before", "time": null, "title": "Make cheesecakes", "note": "2 cakes -- refrigerate. Baked cheesecake keeps 5 days refrigerated."}, {"day": "Saturday May 10 -- Week Before", "time": null, "title": "Make key lime pies", "note": "4 pies -- refrigerate. Keeps 5 days refrigerated."}, {"day": "Thursday May 15 -- Day Before", "time": null, "title": "Pull bourbon baked beans from freezer", "note": "Thaw in refrigerator overnight"}, {"day": "Thursday May 15 -- Day Before", "time": null, "title": "Make corn pudding", "note": "2 pans -- bake 350F 1 hour. Refrigerate overnight. Reheat day of."}, {"day": "Thursday May 15 -- Day Before", "time": null, "title": "Make mac and cheese", "note": "2 half sheet pans -- assemble, refrigerate unbaked. Bake day of."}, {"day": "Thursday May 15 -- Day Before", "time": null, "title": "Make grapefruit rosemary syrup", "note": "Steep EXACTLY 15 min -- refrigerate"}, {"day": "Thursday May 15 -- Day Before", "time": null, "title": "Season wings with chicken dry rub", "note": "Season to taste from base rub. Refrigerate uncovered on racks overnight."}, {"day": "Thursday May 15 -- Day Before", "time": null, "title": "Apply rub to pork butts", "note": "Refrigerate overnight"}, {"day": "Thursday May 15 -- Day Before", "time": null, "title": "Fill Traeger hopper", "note": "Have backup bag ready"}, {"day": "Thursday May 15 -- Day Before", "time": null, "title": "Set up non-perishable station", "note": "Cups, napkins, tongs, utensils, signage"}, {"day": "Thursday May 15 -- Day Before", "time": null, "title": "Pack coolers (no ice yet)", "note": "Ice goes in Saturday morning"}, {"day": "Thursday May 15 -- Day Before", "time": "22:00", "title": "Start Traeger at 225F -- fat cap UP", "note": "3 pork butts -- full hopper, runs overnight"}, {"day": "Saturday May 16 -- Event Day", "time": "04:00", "title": "Check + refill pellet hopper", "note": "~6 hr mark from 10pm start"}, {"day": "Saturday May 16 -- Event Day", "time": "07:30", "title": "Add ice to coolers", "note": ""}, {"day": "Saturday May 16 -- Event Day", "time": "08:00", "title": "Mix grapefruit spritzer", "note": "1L pink grapefruit juice + 2L sparkling water + rosemary syrup to taste -- stir gently"}, {"day": "Saturday May 16 -- Event Day", "time": "09:00", "title": "Bake mac and cheese", "note": "375F 25-30 min until bubbly and golden -- straight from fridge, add splash of milk if dry"}, {"day": "Saturday May 16 -- Event Day", "time": "09:30", "title": "Reheat corn pudding", "note": "350F covered 20 min"}, {"day": "Saturday May 16 -- Event Day", "time": "10:00", "title": "Bump Traeger to 250F", "note": "Monitor pork temp on phone"}, {"day": "Saturday May 16 -- Event Day", "time": "11:00", "title": "Set up toppings bar", "note": "BBQ sauces, pickled onions, jalape\u00f1os, pickles, crispy onions, labels"}, {"day": "Saturday May 16 -- Event Day", "time": "11:30", "title": "Set up drink station", "note": "Spritzer jug + rosemary syrup, sodas, beers, ice"}, {"day": "Saturday May 16 -- Event Day", "time": "12:00", "title": "Assemble summer fruit plate", "note": "Fresh fruit only -- arrange just before service"}, {"day": "Saturday May 16 -- Event Day", "time": "12:00", "title": "Set up dessert station", "note": "Key lime pies + cheesecakes out of fridge -- toppings alongside"}, {"day": "Saturday May 16 -- Event Day", "time": "13:00", "title": "Pull pork at 203-205F", "note": "Wrap in butcher paper. Rest in cooler minimum 1-2 hrs."}, {"day": "Saturday May 16 -- Event Day", "time": "13:00", "title": "Wings on Traeger at 225F", "note": "35 lbs -- cook during pork rest"}, {"day": "Saturday May 16 -- Event Day", "time": "14:00", "title": "Bump wings to 425F", "note": "20-25 min until 175-180F internal -- crisp the skin"}, {"day": "Saturday May 16 -- Event Day", "time": "14:00", "title": "Reheat baked beans", "note": "Low and slow -- add splash of water if too thick. Heat to 165F."}, {"day": "Saturday May 16 -- Event Day", "time": "14:30", "title": "Toss wings in Buffalo sauce", "note": "Immediately after pulling -- serve hot"}, {"day": "Saturday May 16 -- Event Day", "time": "15:00", "title": "Shred pulled pork", "note": "After full rest -- pull and season"}, {"day": "Saturday May 16 -- Event Day", "time": "16:00", "title": "Load all food into chafing dishes", "note": "Pork, wings, beans, mac, corn pudding"}, {"day": "Saturday May 16 -- Event Day", "time": "16:30", "title": "Final check -- all stations ready", "note": "Walk every station. Verify temps, labels, utensils, drinks."}, {"day": "Saturday May 16 -- Event Day", "time": "16:00", "title": "OPEN SERVING", "note": "4:00pm -- 50-60 guests"}];
-var MAY_SHOPPING = [{"item": "Pork butts (8-10 lbs each)", "totalAmount": "3", "unit": "each", "category": "Protein", "when": "Buy Ahead", "id": "m17529213", "checked": false}, {"item": "Chicken wings", "totalAmount": "35", "unit": "lbs", "category": "Protein", "when": "Buy Ahead", "id": "m91303741", "checked": false}, {"item": "Philadelphia cream cheese", "totalAmount": "8", "unit": "packages (8oz)", "category": "Dairy & Eggs", "when": "Buy Ahead", "id": "m78487407", "checked": false}, {"item": "Sweetened condensed milk", "totalAmount": "4", "unit": "cans (14oz)", "category": "Dry Goods", "when": "Buy Ahead", "id": "m52230370", "checked": false}, {"item": "Eggs -- large", "totalAmount": "24", "unit": "each", "category": "Dairy & Eggs", "when": "Buy Ahead", "id": "m10764126", "checked": false}, {"item": "Sour cream", "totalAmount": "24", "unit": "oz", "category": "Dairy & Eggs", "when": "Buy Ahead", "id": "m62321298", "checked": false}, {"item": "Heavy whipping cream", "totalAmount": "2", "unit": "quarts", "category": "Dairy & Eggs", "when": "Buy Ahead", "id": "m80924670", "checked": false}, {"item": "Butter -- unsalted", "totalAmount": "2", "unit": "lbs", "category": "Dairy & Eggs", "when": "Buy Ahead", "id": "m37952917", "checked": false}, {"item": "Graham cracker crusts (9-inch)", "totalAmount": "4", "unit": "each", "category": "Dry Goods", "when": "Buy Ahead", "id": "m72732233", "checked": false}, {"item": "Graham crackers (for cheesecake crust)", "totalAmount": "4", "unit": "cups crushed", "category": "Dry Goods", "when": "Buy Ahead", "id": "m40547091", "checked": false}, {"item": "Elbow macaroni", "totalAmount": "3", "unit": "lbs", "category": "Dry Goods", "when": "Buy Ahead", "id": "m88908245", "checked": false}, {"item": "Sharp cheddar -- block (grate yourself)", "totalAmount": "3", "unit": "lbs", "category": "Dairy & Eggs", "when": "Buy Ahead", "id": "m70407730", "checked": false}, {"item": "Gruyere or Monterey Jack", "totalAmount": "1", "unit": "lb", "category": "Dairy & Eggs", "when": "Buy Ahead", "id": "m41795837", "checked": false}, {"item": "Half and half", "totalAmount": "1", "unit": "quart", "category": "Dairy & Eggs", "when": "Buy Ahead", "id": "m24987103", "checked": false}, {"item": "Whole milk", "totalAmount": "2", "unit": "quarts", "category": "Dairy & Eggs", "when": "Buy Ahead", "id": "m27614455", "checked": false}, {"item": "Flour -- all purpose", "totalAmount": "1", "unit": "bag", "category": "Dry Goods", "when": "Buy Ahead", "id": "m42457303", "checked": false}, {"item": "Panko breadcrumbs", "totalAmount": "1", "unit": "cup", "category": "Dry Goods", "when": "Buy Ahead", "id": "m17378226", "checked": false}, {"item": "Jiffy corn muffin mix", "totalAmount": "3", "unit": "boxes", "category": "Dry Goods", "when": "Buy Ahead", "id": "m85436229", "checked": false}, {"item": "Canned whole kernel corn", "totalAmount": "3", "unit": "cans", "category": "Canned", "when": "Buy Ahead", "id": "m10784869", "checked": false}, {"item": "Canned creamed corn", "totalAmount": "3", "unit": "cans", "category": "Canned", "when": "Buy Ahead", "id": "m10277093", "checked": false}, {"item": "Nellie & Joe's Key Lime Juice", "totalAmount": "2", "unit": "cups", "category": "Beverages", "when": "Buy Ahead", "id": "m88338243", "checked": false}, {"item": "Pink grapefruit juice", "totalAmount": "1", "unit": "liter", "category": "Beverages", "when": "Buy Ahead", "id": "m53476113", "checked": false}, {"item": "Frank's hot sauce", "totalAmount": "1.5", "unit": "cups", "category": "Dry Goods", "when": "Buy Ahead", "id": "m16670055", "checked": false}, {"item": "White vinegar", "totalAmount": "0.75", "unit": "cup", "category": "Dry Goods", "when": "Buy Ahead", "id": "m56546174", "checked": false}, {"item": "Cherry pie filling", "totalAmount": "1", "unit": "can", "category": "Canned", "when": "Buy Ahead", "id": "m85369087", "checked": false}, {"item": "Powdered sugar", "totalAmount": "1", "unit": "bag", "category": "Dry Goods", "when": "Buy Ahead", "id": "m36669376", "checked": false}, {"item": "Vanilla extract", "totalAmount": "1", "unit": "bottle", "category": "Dry Goods", "when": "Buy Ahead", "id": "m40072463", "checked": false}, {"item": "Traeger pellets", "totalAmount": "2", "unit": "bags", "category": "Supplies", "when": "Buy Ahead", "id": "m81419649", "checked": false}, {"item": "Butcher paper", "totalAmount": "1", "unit": "roll", "category": "Supplies", "when": "Buy Ahead", "id": "m41791045", "checked": false}, {"item": "Sparkling water", "totalAmount": "2", "unit": "liters", "category": "Beverages", "when": "Buy Fresh", "id": "m76890394", "checked": false}, {"item": "Fresh rosemary", "totalAmount": "6", "unit": "sprigs", "category": "Produce", "when": "Buy Fresh", "id": "m43448551", "checked": false}, {"item": "Fresh strawberries", "totalAmount": "2", "unit": "pints", "category": "Produce", "when": "Buy Fresh", "id": "m11673192", "checked": false}, {"item": "Fresh blueberries", "totalAmount": "2", "unit": "pints", "category": "Produce", "when": "Buy Fresh", "id": "m41947735", "checked": false}, {"item": "Fresh fruit for platter", "totalAmount": "", "unit": "assorted", "category": "Produce", "when": "Buy Fresh", "id": "m59006060", "checked": false}, {"item": "Limes (garnish)", "totalAmount": "4", "unit": "each", "category": "Produce", "when": "Buy Fresh", "id": "m34676020", "checked": false}, {"item": "Sodas", "totalAmount": "", "unit": "assorted", "category": "Beverages", "when": "Buy Fresh", "id": "m15104415", "checked": false}, {"item": "Beer", "totalAmount": "", "unit": "assorted", "category": "Beverages", "when": "Buy Fresh", "id": "m49055187", "checked": false}, {"item": "Butterfly pea flowers", "totalAmount": "", "unit": "", "category": "Dry Goods", "when": "Already Sourced", "id": "m37654381", "checked": false}, {"item": "Bourbon baked beans (frozen)", "totalAmount": "", "unit": "", "category": "Freezer", "when": "Already Sourced", "id": "m32972172", "checked": false}, {"item": "BBQ sauces (KC, SC, NC)", "totalAmount": "", "unit": "", "category": "Dry Goods", "when": "Already Sourced", "id": "m77550587", "checked": false}, {"item": "Leftover toppings bar items", "totalAmount": "", "unit": "", "category": "Supplies", "when": "Already Sourced", "id": "m57760857", "checked": false}, {"item": "Chafing dishes + fuel", "totalAmount": "", "unit": "", "category": "Supplies", "when": "Already Sourced", "id": "m71420763", "checked": false}];
+var MAY_TIMELINE = [{"day": "Sunday May 10 -- Week Before", "time": null, "title": "Make cheesecakes", "note": "2 cakes -- refrigerate. Baked cheesecake keeps 5 days refrigerated."}, {"day": "Sunday May 10 -- Week Before", "time": null, "title": "Make key lime pies", "note": "4 pies -- refrigerate. Keeps 5 days refrigerated."}, {"day": "Friday May 15 -- Day Before", "time": null, "title": "Pull bourbon baked beans from freezer", "note": "Thaw in refrigerator overnight"}, {"day": "Friday May 15 -- Day Before", "time": null, "title": "Make corn pudding", "note": "2 pans -- bake 350F 1 hour. Refrigerate overnight. Reheat day of."}, {"day": "Friday May 15 -- Day Before", "time": null, "title": "Make mac and cheese", "note": "2 half sheet pans -- assemble, refrigerate unbaked. Bake day of."}, {"day": "Friday May 15 -- Day Before", "time": null, "title": "Make grapefruit rosemary syrup", "note": "Steep EXACTLY 15 min -- refrigerate"}, {"day": "Friday May 15 -- Day Before", "time": null, "title": "Season wings with chicken dry rub", "note": "Season to taste from base rub. Refrigerate uncovered on racks overnight."}, {"day": "Friday May 15 -- Day Before", "time": null, "title": "Apply rub to pork butts", "note": "Refrigerate overnight"}, {"day": "Friday May 15 -- Day Before", "time": null, "title": "Fill Traeger hopper", "note": "Have backup bag ready"}, {"day": "Friday May 15 -- Day Before", "time": null, "title": "Set up non-perishable station", "note": "Cups, napkins, tongs, utensils, signage"}, {"day": "Friday May 15 -- Day Before", "time": null, "title": "Pack coolers (no ice yet)", "note": "Ice goes in Saturday morning"}, {"day": "Friday May 15 -- Day Before", "time": "22:00", "title": "Start Traeger at 225F -- fat cap UP", "note": "3 pork butts -- full hopper, runs overnight"}, {"day": "Saturday May 16 -- Event Day", "time": "04:00", "title": "Check + refill pellet hopper", "note": "~6 hr mark from 10pm start"}, {"day": "Saturday May 16 -- Event Day", "time": "07:30", "title": "Add ice to coolers", "note": ""}, {"day": "Saturday May 16 -- Event Day", "time": "08:00", "title": "Mix grapefruit spritzer", "note": "1L pink grapefruit juice + 2L sparkling water + rosemary syrup to taste -- stir gently"}, {"day": "Saturday May 16 -- Event Day", "time": "09:00", "title": "Bake mac and cheese", "note": "375F 25-30 min until bubbly and golden -- straight from fridge, add splash of milk if dry"}, {"day": "Saturday May 16 -- Event Day", "time": "09:30", "title": "Reheat corn pudding", "note": "350F covered 20 min"}, {"day": "Saturday May 16 -- Event Day", "time": "10:00", "title": "Bump Traeger to 250F", "note": "Monitor pork temp on phone"}, {"day": "Saturday May 16 -- Event Day", "time": "11:00", "title": "Set up toppings bar", "note": "BBQ sauces, pickled onions, jalape\u00f1os, pickles, crispy onions, labels"}, {"day": "Saturday May 16 -- Event Day", "time": "11:30", "title": "Set up drink station", "note": "Spritzer jug + rosemary syrup, sodas, beers, ice"}, {"day": "Saturday May 16 -- Event Day", "time": "12:00", "title": "Assemble summer fruit plate", "note": "Fresh fruit only -- arrange just before service"}, {"day": "Saturday May 16 -- Event Day", "time": "12:00", "title": "Set up dessert station", "note": "Key lime pies + cheesecakes out of fridge -- toppings alongside"}, {"day": "Saturday May 16 -- Event Day", "time": "13:00", "title": "Pull pork at 203-205F", "note": "Wrap in butcher paper. Rest in cooler minimum 1-2 hrs."}, {"day": "Saturday May 16 -- Event Day", "time": "13:00", "title": "Wings on Traeger at 225F", "note": "35 lbs -- cook during pork rest"}, {"day": "Saturday May 16 -- Event Day", "time": "14:00", "title": "Bump wings to 425F", "note": "20-25 min until 175-180F internal -- crisp the skin"}, {"day": "Saturday May 16 -- Event Day", "time": "14:00", "title": "Reheat baked beans", "note": "Low and slow -- add splash of water if too thick. Heat to 165F."}, {"day": "Saturday May 16 -- Event Day", "time": "14:30", "title": "Toss wings in Buffalo sauce", "note": "Immediately after pulling -- serve hot"}, {"day": "Saturday May 16 -- Event Day", "time": "15:00", "title": "Shred pulled pork", "note": "After full rest -- pull and season"}, {"day": "Saturday May 16 -- Event Day", "time": "16:00", "title": "Load all food into chafing dishes", "note": "Pork, wings, beans, mac, corn pudding"}, {"day": "Saturday May 16 -- Event Day", "time": "16:30", "title": "Final check -- all stations ready", "note": "Walk every station. Verify temps, labels, utensils, drinks."}, {"day": "Saturday May 16 -- Event Day", "time": "16:00", "title": "OPEN SERVING", "note": "4:00pm -- 50-60 guests"}];
+var MAY_SHOPPING = [{"item": "Pork butts (8-10 lbs each)", "totalAmount": "3", "unit": "each", "category": "Protein", "when": "Buy Ahead", "id": "m17529213", "checked": false}, {"item": "Chicken wings", "totalAmount": "35", "unit": "lbs", "category": "Protein", "when": "Buy Ahead", "id": "m91303741", "checked": false}, {"item": "Philadelphia cream cheese", "totalAmount": "8", "unit": "packages (8oz)", "category": "Dairy & Eggs", "when": "Buy Ahead", "id": "m78487407", "checked": false}, {"item": "Sweetened condensed milk", "totalAmount": "4", "unit": "cans (14oz)", "category": "Dry Goods", "when": "Buy Ahead", "id": "m52230370", "checked": false}, {"item": "Eggs -- large", "totalAmount": "24", "unit": "each", "category": "Dairy & Eggs", "when": "Buy Ahead", "id": "m10764126", "checked": false}, {"item": "Sour cream", "totalAmount": "24", "unit": "oz", "category": "Dairy & Eggs", "when": "Buy Ahead", "id": "m62321298", "checked": false}, {"item": "Heavy whipping cream", "totalAmount": "2", "unit": "quarts", "category": "Dairy & Eggs", "when": "Buy Ahead", "id": "m80924670", "checked": false}, {"item": "Butter -- unsalted", "totalAmount": "2", "unit": "lbs", "category": "Dairy & Eggs", "when": "Buy Ahead", "id": "m37952917", "checked": false}, {"item": "Graham cracker crusts (9-inch)", "totalAmount": "4", "unit": "each", "category": "Dry Goods", "when": "Buy Ahead", "id": "m72732233", "checked": false}, {"item": "Graham crackers (for cheesecake crust)", "totalAmount": "4", "unit": "cups crushed", "category": "Dry Goods", "when": "Buy Ahead", "id": "m40547091", "checked": false}, {"item": "Elbow macaroni", "totalAmount": "3", "unit": "lbs", "category": "Dry Goods", "when": "Buy Ahead", "id": "m88908245", "checked": false}, {"item": "Sharp cheddar -- block (grate yourself)", "totalAmount": "3", "unit": "lbs", "category": "Dairy & Eggs", "when": "Buy Ahead", "id": "m70407730", "checked": false}, {"item": "Gruyere or Monterey Jack", "totalAmount": "1", "unit": "lb", "category": "Dairy & Eggs", "when": "Buy Ahead", "id": "m41795837", "checked": false}, {"item": "Half and half", "totalAmount": "1", "unit": "quart", "category": "Dairy & Eggs", "when": "Buy Ahead", "id": "m24987103", "checked": false}, {"item": "Whole milk", "totalAmount": "2", "unit": "quarts", "category": "Dairy & Eggs", "when": "Buy Ahead", "id": "m27614455", "checked": false}, {"item": "Flour -- all purpose", "totalAmount": "1", "unit": "bag", "category": "Dry Goods", "when": "Buy Ahead", "id": "m42457303", "checked": false}, {"item": "Panko breadcrumbs", "totalAmount": "1", "unit": "cup", "category": "Dry Goods", "when": "Buy Ahead", "id": "m17378226", "checked": false}, {"item": "Jiffy corn muffin mix", "totalAmount": "3", "unit": "boxes", "category": "Dry Goods", "when": "Buy Ahead", "id": "m85436229", "checked": false}, {"item": "Canned whole kernel corn", "totalAmount": "3", "unit": "cans", "category": "Canned", "when": "Buy Ahead", "id": "m10784869", "checked": false}, {"item": "Canned creamed corn", "totalAmount": "3", "unit": "cans", "category": "Canned", "when": "Buy Ahead", "id": "m10277093", "checked": false}, {"item": "Nellie & Joe's Key Lime Juice", "totalAmount": "2", "unit": "cups", "category": "Beverages", "when": "Buy Ahead", "id": "m88338243", "checked": false}, {"item": "Pink grapefruit juice", "totalAmount": "1", "unit": "liter", "category": "Beverages", "when": "Buy Fresh", "id": "m53476113", "checked": false}, {"item": "Frank's hot sauce", "totalAmount": "1.5", "unit": "cups", "category": "Dry Goods", "when": "Buy Ahead", "id": "m16670055", "checked": false}, {"item": "White vinegar", "totalAmount": "0.75", "unit": "cup", "category": "Dry Goods", "when": "Buy Ahead", "id": "m56546174", "checked": false}, {"item": "Cherry pie filling", "totalAmount": "1", "unit": "can", "category": "Canned", "when": "Buy Ahead", "id": "m85369087", "checked": false}, {"item": "Powdered sugar", "totalAmount": "1", "unit": "bag", "category": "Dry Goods", "when": "Buy Ahead", "id": "m36669376", "checked": false}, {"item": "Vanilla extract", "totalAmount": "1", "unit": "bottle", "category": "Dry Goods", "when": "Buy Ahead", "id": "m40072463", "checked": false}, {"item": "Traeger pellets", "totalAmount": "2", "unit": "bags", "category": "Supplies", "when": "Buy Ahead", "id": "m81419649", "checked": false}, {"item": "Butcher paper", "totalAmount": "1", "unit": "roll", "category": "Supplies", "when": "Buy Ahead", "id": "m41791045", "checked": false}, {"item": "Sparkling water", "totalAmount": "2", "unit": "liters", "category": "Beverages", "when": "Buy Fresh", "id": "m76890394", "checked": false}, {"item": "Fresh rosemary", "totalAmount": "6", "unit": "sprigs", "category": "Produce", "when": "Buy Fresh", "id": "m43448551", "checked": false}, {"item": "Fresh strawberries", "totalAmount": "2", "unit": "pints", "category": "Produce", "when": "Buy Fresh", "id": "m11673192", "checked": false}, {"item": "Fresh blueberries", "totalAmount": "2", "unit": "pints", "category": "Produce", "when": "Buy Fresh", "id": "m41947735", "checked": false}, {"item": "Fresh fruit for platter", "totalAmount": "", "unit": "assorted", "category": "Produce", "when": "Buy Fresh", "id": "m59006060", "checked": false}, {"item": "Limes (garnish)", "totalAmount": "4", "unit": "each", "category": "Produce", "when": "Buy Fresh", "id": "m34676020", "checked": false}, {"item": "Sodas", "totalAmount": "", "unit": "assorted", "category": "Beverages", "when": "Buy Ahead", "id": "m15104415", "checked": false}, {"item": "Beer", "totalAmount": "", "unit": "assorted", "category": "Beverages", "when": "Buy Ahead", "id": "m49055187", "checked": false}, {"item": "Butterfly pea flowers", "totalAmount": "", "unit": "", "category": "Dry Goods", "when": "Already Sourced", "id": "m37654381", "checked": false}, {"item": "Bourbon baked beans (frozen)", "totalAmount": "", "unit": "", "category": "Freezer", "when": "Already Sourced", "id": "m32972172", "checked": false}, {"item": "BBQ sauces (KC, SC, NC)", "totalAmount": "", "unit": "", "category": "Dry Goods", "when": "Already Sourced", "id": "m77550587", "checked": false}, {"item": "Leftover toppings bar items", "totalAmount": "", "unit": "", "category": "Supplies", "when": "Already Sourced", "id": "m57760857", "checked": false}, {"item": "Chafing dishes + fuel", "totalAmount": "", "unit": "", "category": "Supplies", "when": "Already Sourced", "id": "m71420763", "checked": false}];
 
 function addMay16Event() {
   // Check if already added
   if (events.find(function(e){ return e.name === "Mila\'s Graduation Party"; })) return;
   
   var mayRecipes = [
-    {id:'r-wings',name:'Smoked Buffalo Wings',category:'Main',type:'lydell',baseServings:60,yieldText:'35 lbs wings',
+    {id:'r-wings',name:'Smoked Buffalo Wings',category:'Main',type:'lydell',baseServings:8,yieldText:'5 lbs = ~8 servings',
      ingredients:[
-       {item:'Chicken wings',amount:'35',unit:'lbs',note:'pat dry before seasoning'},
+       {item:'Chicken wings',amount:'5',unit:'lbs (2268g)',note:'pat dry before seasoning'},
        {item:'Base chicken dry rub',amount:'',unit:'to taste',note:'season to taste from base rub'},
-       {item:'Butter',amount:'6',unit:'sticks (678g)',note:''},
-       {item:"Frank's hot sauce",amount:'1.5',unit:'cups (355ml)',note:''},
-       {item:'White vinegar',amount:'0.75',unit:'cup (177ml)',note:''},
-       {item:'Garlic',amount:'6',unit:'tbsp (54g)',note:'minced'},
+       {item:'Butter',amount:'2',unit:'sticks (226g)',note:''},
+       {item:"Frank's hot sauce",amount:'0.5',unit:'cup (118ml)',note:''},
+       {item:'White vinegar',amount:'0.25',unit:'cup (59ml)',note:''},
+       {item:'Garlic',amount:'2',unit:'tbsp (18g)',note:'minced'},
      ],
      method:['Season wings with chicken dry rub to taste. Refrigerate uncovered overnight if time allows.',
        'Traeger at 225F -- smoke wings 45-60 min.',
@@ -988,36 +1000,36 @@ function addMay16Event() {
      storage:'Hot hold above 140F. Toss in sauce right before serving.',
      safetyTips:'Internal temp 165F minimum. 175-180F preferred. Hot hold above 140F.'},
 
-    {id:'r-dry-rub',name:'Base Chicken Dry Rub',category:'Component',type:'lydell',baseServings:60,yieldText:'large batch',
+    {id:'r-dry-rub',name:'Base Chicken Dry Rub',category:'Component',type:'lydell',baseServings:18,yieldText:'1 cup rub = coats ~18 lbs / 4 pans',
      ingredients:[
-       {item:'Salt',amount:'16',unit:'tbsp / 1 cup (288g)',note:''},
-       {item:'Garlic powder',amount:'8',unit:'tbsp / 1/2 cup (72g)',note:''},
-       {item:'Onion powder',amount:'8',unit:'tbsp / 1/2 cup (80g)',note:''},
-       {item:'Thyme',amount:'8',unit:'tsp (8g)',note:''},
-       {item:'Rubbed sage',amount:'8',unit:'tsp (8g)',note:''},
-       {item:'Paprika',amount:'8',unit:'tsp (18g)',note:''},
-       {item:'White pepper',amount:'2',unit:'tsp (6g)',note:''},
+       {item:'Salt',amount:'8',unit:'tbsp (144g)',note:''},
+       {item:'Garlic powder',amount:'4',unit:'tbsp (36g)',note:''},
+       {item:'Onion powder',amount:'4',unit:'tbsp (40g)',note:''},
+       {item:'Thyme',amount:'4',unit:'tsp (4g)',note:''},
+       {item:'Rubbed sage',amount:'4',unit:'tsp (4g)',note:''},
+       {item:'Paprika',amount:'4',unit:'tsp (9g)',note:''},
+       {item:'White pepper',amount:'1',unit:'tsp (3g)',note:''},
      ],
      method:['Mix all ingredients together.','Store in airtight container up to 6 months.','Apply liberally to chicken before cooking.','Alter to taste for specific applications.'],
      makeAhead:'Make anytime. Keeps 6 months.',
      storage:'Airtight container, cool dry place.',
      safetyTips:'No concerns.'},
 
-    {id:'r-mac-cheese',name:'Baked Mac and Cheese',category:'Side',type:'lydell',baseServings:50,yieldText:'2 half sheet pans',
+    {id:'r-mac-cheese',name:'Baked Mac and Cheese',category:'Side',type:'lydell',baseServings:25,yieldText:'1 half sheet pan = ~25 servings',
      ingredients:[
-       {item:'Elbow macaroni',amount:'3',unit:'lbs (1361g)',note:'cook 1 min shy of al dente'},
-       {item:'Butter',amount:'0.75',unit:'cup (170g)',note:''},
-       {item:'All purpose flour',amount:'0.75',unit:'cup (94g)',note:''},
-       {item:'Whole milk',amount:'2',unit:'quarts (1893ml)',note:''},
-       {item:'Half and half',amount:'2',unit:'cups (473ml)',note:''},
-       {item:'Sharp cheddar',amount:'3',unit:'lbs (1361g)',note:'grate yourself -- no bags'},
-       {item:'Gruyere or Monterey Jack',amount:'1',unit:'lb (454g)',note:'your choice'},
-       {item:'Salt',amount:'1',unit:'tbsp (18g)',note:''},
-       {item:'Black pepper',amount:'1',unit:'tsp (3g)',note:''},
-       {item:'Dry mustard',amount:'1',unit:'tsp (3g)',note:''},
-       {item:'Smoked paprika',amount:'1',unit:'tsp (3g)',note:''},
-       {item:'Panko breadcrumbs',amount:'1',unit:'cup (60g)',note:''},
-       {item:'Butter (topping)',amount:'3',unit:'tbsp (42g)',note:'melted -- mix with panko'},
+       {item:'Elbow macaroni',amount:'1.5',unit:'lbs (680g)',note:'cook 1 min shy of al dente'},
+       {item:'Butter',amount:'6',unit:'tbsp (85g)',note:''},
+       {item:'All purpose flour',amount:'6',unit:'tbsp (47g)',note:''},
+       {item:'Whole milk',amount:'1',unit:'quart (946ml)',note:''},
+       {item:'Half and half',amount:'1',unit:'cup (237ml)',note:''},
+       {item:'Sharp cheddar',amount:'1.5',unit:'lbs (680g)',note:'grate yourself -- no bags'},
+       {item:'Gruyere or Monterey Jack',amount:'0.5',unit:'lb (227g)',note:'your choice'},
+       {item:'Salt',amount:'1.5',unit:'tsp (9g)',note:''},
+       {item:'Black pepper',amount:'0.5',unit:'tsp (1.5g)',note:''},
+       {item:'Dry mustard',amount:'0.5',unit:'tsp (1.5g)',note:''},
+       {item:'Smoked paprika',amount:'0.5',unit:'tsp (1.5g)',note:''},
+       {item:'Panko breadcrumbs',amount:'0.5',unit:'cup (30g)',note:''},
+       {item:'Butter (topping)',amount:'1.5',unit:'tbsp (21g)',note:'melted -- mix with panko'},
      ],
      method:['Cook pasta 1 min shy of al dente. Drain, toss with olive oil.',
        'Make roux: melt butter, whisk in flour, cook 1 min.',
@@ -1031,14 +1043,14 @@ function addMay16Event() {
      storage:'Hold above 140F in chafing dish.',
      safetyTips:'Reheat to 165F. Hold above 140F.'},
 
-    {id:'r-corn-pudding',name:'Corn Pudding',category:'Side',type:'lydell',baseServings:50,yieldText:'2 pans',
+    {id:'r-corn-pudding',name:'Corn Pudding',category:'Side',type:'lydell',baseServings:25,yieldText:'1 pan = ~25 servings',
      ingredients:[
-       {item:'Whole kernel corn',amount:'3',unit:'cans (drained)',note:''},
-       {item:'Creamed corn',amount:'3',unit:'cans',note:''},
-       {item:'Eggs',amount:'6',unit:'each',note:''},
-       {item:'Butter',amount:'3',unit:'sticks (339g)',note:'melted'},
-       {item:'Sour cream',amount:'24',unit:'oz (680g)',note:''},
-       {item:'Jiffy corn muffin mix',amount:'3',unit:'boxes',note:''},
+       {item:'Whole kernel corn',amount:'2',unit:'cans (drained)',note:''},
+       {item:'Creamed corn',amount:'2',unit:'cans',note:''},
+       {item:'Eggs',amount:'4',unit:'each',note:''},
+       {item:'Butter',amount:'2',unit:'sticks (226g)',note:'melted'},
+       {item:'Sour cream',amount:'16',unit:'oz (454g)',note:''},
+       {item:'Jiffy corn muffin mix',amount:'2',unit:'boxes',note:''},
      ],
      method:['Mix all ingredients together until combined.',
        'Divide evenly between 2 greased 9x13 pans.',
@@ -1047,17 +1059,17 @@ function addMay16Event() {
      storage:'Refrigerate. Reheat to 165F.',
      safetyTips:'Contains eggs -- refrigerate. Reheat to 165F.'},
 
-    {id:'r-cheesecake',name:'Philadelphia Cream Cheese Cheesecake',category:'Dessert',type:'lydell',baseServings:24,yieldText:'2 cakes (9-inch)',
+    {id:'r-cheesecake',name:'Philadelphia Cream Cheese Cheesecake',category:'Dessert',type:'lydell',baseServings:12,yieldText:'1 cake (9-inch) = ~12 servings',
      ingredients:[
-       {item:'Graham cracker crumbs',amount:'4',unit:'cups (400g)',note:''},
-       {item:'Sugar (crust)',amount:'8',unit:'tbsp (100g)',note:''},
-       {item:'Butter (crust)',amount:'8',unit:'tbsp (113g)',note:'melted'},
-       {item:'Philadelphia cream cheese',amount:'8',unit:'packages / 64oz (1814g)',note:'softened'},
-       {item:'Sugar (filling)',amount:'2',unit:'cups (400g)',note:''},
-       {item:'Vanilla extract',amount:'2',unit:'tsp (10ml)',note:''},
-       {item:'Eggs',amount:'8',unit:'each',note:''},
-       {item:'Sour cream',amount:'2',unit:'cups (480g)',note:''},
-       {item:'All purpose flour',amount:'2',unit:'tbsp (16g)',note:''},
+       {item:'Graham cracker crumbs',amount:'2',unit:'cups (200g)',note:''},
+       {item:'Sugar (crust)',amount:'4',unit:'tbsp (50g)',note:''},
+       {item:'Butter (crust)',amount:'4',unit:'tbsp (57g)',note:'melted'},
+       {item:'Philadelphia cream cheese',amount:'4',unit:'packages / 32oz (907g)',note:'softened'},
+       {item:'Sugar (filling)',amount:'1',unit:'cup (200g)',note:''},
+       {item:'Vanilla extract',amount:'1',unit:'tsp (5ml)',note:''},
+       {item:'Eggs',amount:'4',unit:'each',note:''},
+       {item:'Sour cream',amount:'1',unit:'cup (240g)',note:''},
+       {item:'All purpose flour',amount:'1',unit:'tbsp (8g)',note:''},
      ],
      method:['Mix crust ingredients. Press into two 9-inch springform pans.',
        'Beat cream cheese, sugar and vanilla until smooth.',
@@ -1071,12 +1083,12 @@ function addMay16Event() {
      storage:'Refrigerate. Do not leave out more than 2 hrs.',
      safetyTips:'Contains eggs and dairy. Keep refrigerated. Max 2 hrs at room temp.'},
 
-    {id:'r-keylime-may',name:"Nellie & Joe's Key Lime Pie",category:'Dessert',type:'lydell',baseServings:40,yieldText:'4 pies (9-inch)',
+    {id:'r-keylime-may',name:"Nellie & Joe's Key Lime Pie",category:'Dessert',type:'lydell',baseServings:10,yieldText:'1 pie (9-inch) = ~10 servings',
      ingredients:[
-       {item:'Graham cracker pie crusts (9-inch)',amount:'4',unit:'each',note:'premade'},
-       {item:'Sweetened condensed milk',amount:'4',unit:'cans (14oz)',note:''},
-       {item:'Egg yolks',amount:'12',unit:'each',note:'whites not used'},
-       {item:"Nellie & Joe's Key West Lime Juice",amount:'2',unit:'cups (473ml)',note:''},
+       {item:'Graham cracker pie crust (9-inch)',amount:'1',unit:'each',note:'premade'},
+       {item:'Sweetened condensed milk',amount:'1',unit:'can (14oz)',note:''},
+       {item:'Egg yolks',amount:'3',unit:'each',note:'whites not used'},
+       {item:"Nellie & Joe's Key West Lime Juice",amount:'0.5',unit:'cup (118ml)',note:''},
      ],
      method:['Combine condensed milk, egg yolks and lime juice. Blend until smooth.',
        'Divide evenly between 4 pie crusts.',
@@ -1088,7 +1100,7 @@ function addMay16Event() {
      storage:'Refrigerate. Do not leave out more than 2 hrs.',
      safetyTips:'Contains egg yolks. Keep refrigerated. Max 2 hrs at room temp.'},
 
-    {id:'r-grapefruit-spritzer-may',name:'Grapefruit Rosemary Spritzer',category:'Drink',type:'lydell',baseServings:60,yieldText:'2.2 gallon container',
+    {id:'r-grapefruit-spritzer-may',name:'Grapefruit Rosemary Spritzer',category:'Drink',type:'lydell',baseServings:60,yieldText:'2.2 gallon container = ~60 servings',
      ingredients:[
        {item:'Pink grapefruit juice',amount:'3',unit:'liters',note:''},
        {item:'Sparkling water',amount:'5',unit:'liters',note:'mix day of -- stir gently'},
