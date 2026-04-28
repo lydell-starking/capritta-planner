@@ -3,7 +3,7 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0, user-scalable=no, viewport-fit=cover">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="Capritta">
@@ -12,10 +12,10 @@
 <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
 <style>
 :root{--navy:#0a1628;--blue:#1a3a6b;--mid:#1e4d8c;--sky:#5b9bd5;--gold:#c9a84c;--cream:#f4f0e6;--sage:#1e6b3a;--rust:#8b2020;--ink:#1a1a1a;--muted:#8a9bb0;--border:#d0c9bb;--done-bg:rgba(255,255,255,0.03);--item-bg:var(--cream);--item-color:var(--ink);--item-note-color:#5a5240;--item-recipe-bg:var(--navy)}
-@media(prefers-color-scheme:light){:root{--navy:#f5f3ef;--blue:#e8e2d8;--mid:#d4c9b8;--sky:#2a6096;--gold:#8a6a1a;--cream:#1a1a1a;--sage:#1e6b3a;--rust:#8b2020;--ink:#1a1a1a;--muted:#6a6a6a;--border:#c0b8a8;--done-bg:rgba(0,0,0,0.04);--item-bg:#ffffff;--item-color:#1a1a1a;--item-note-color:#5a5240;--item-recipe-bg:#1a3a6b}}
+@media(prefers-color-scheme:light){:root{--navy:#f5f3ef;--blue:#e8e2d8;--mid:#d4c9b8;--sky:#2a6096;--gold:#8a6a1a;--cream:#1a1a1a;--sage:#1e6b3a;--rust:#8b2020;--ink:#1a1a1a;--muted:#5a5a5a;--border:#c0b8a8;--done-bg:rgba(0,0,0,0.04);--item-bg:#ffffff;--item-color:#1a1a1a;--item-note-color:#5a5240;--item-recipe-bg:#1a3a6b}}
 *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
-html,body{height:100%}
-body{background:var(--navy);color:var(--cream);font-family:'IBM Plex Mono',monospace;display:flex;flex-direction:column;overflow:hidden}
+html{-webkit-text-size-adjust:100%;text-size-adjust:100%}
+body{background:var(--navy);color:var(--cream);font-family:'IBM Plex Mono',monospace;display:flex;flex-direction:column;overflow:hidden;position:fixed;width:100%;height:100%;overscroll-behavior:none}
 .app-header{background:var(--navy);border-bottom:3px double var(--gold);padding:14px 16px 10px;flex-shrink:0;padding-top:max(14px,env(safe-area-inset-top))}
 .app-header-top{display:flex;align-items:center;justify-content:space-between;margin-bottom:6px}
 .app-title{font-family:'Bebas Neue',sans-serif;font-size:clamp(1.4rem,6vw,1.9rem);color:var(--cream);letter-spacing:0.1em;line-height:1}
@@ -81,13 +81,13 @@ body{background:var(--navy);color:var(--cream);font-family:'IBM Plex Mono',monos
 .shop-stats{font-size:0.6rem;color:var(–muted);letter-spacing:0.08em;margin-bottom:12px}
 .shop-stats span{color:var(–gold)}
 .recipe-grid{display:flex;flex-direction:column;gap:4px}
-.recipe-card{background:var(–cream);border:1px solid var(–border);border-left:3px solid var(–gold);border-radius:2px;padding:12px 14px;cursor:pointer;color:var(–ink);display:flex;align-items:center;gap:10px}
+.recipe-card{background:var(–item-bg);border:1px solid var(–border);border-left:3px solid var(–gold);border-radius:2px;padding:12px 14px;cursor:pointer;color:var(–item-color);display:flex;align-items:center;gap:10px}
 .recipe-card:active{transform:scale(0.985)}
 .recipe-thumb{width:48px;height:48px;border-radius:2px;object-fit:cover;flex-shrink:0}
-.recipe-icon{width:48px;height:48px;background:var(–navy);border-radius:2px;flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:1.2rem}
-.recipe-name{font-size:0.875rem;font-weight:600;margin-bottom:3px}
-.recipe-meta{font-size:0.65rem;color:#5a5240}
-.recipe-detail{display:none;position:fixed;inset:0;background:var(–navy);z-index:200;overflow-y:auto;padding-top:env(safe-area-inset-top)}
+.recipe-icon{width:48px;height:48px;background:var(–blue);border-radius:2px;flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:1.2rem}
+.recipe-name{font-size:0.875rem;font-weight:600;margin-bottom:3px;color:var(–item-color)}
+.recipe-meta{font-size:0.65rem;color:var(–muted)}
+.recipe-detail{display:none;position:fixed;inset:0;background:var(–navy);z-index:200;overflow-y:auto;padding-top:env(safe-area-inset-top);color:var(–cream)}
 .recipe-detail.open{display:block}
 .rd-header{background:var(–navy);border-bottom:2px solid var(–gold);padding:14px 16px;display:flex;align-items:center;gap:8px;position:sticky;top:0;z-index:10;flex-wrap:wrap}
 .rd-back{background:none;border:1px solid var(–blue);color:var(–sky);font-family:‘IBM Plex Mono’,monospace;font-size:0.65rem;padding:6px 12px;border-radius:2px;cursor:pointer;flex-shrink:0}
@@ -833,27 +833,42 @@ function openEvOverlay(){
 var list=document.getElementById(‘ev-list’);
 list.innerHTML=events.map(function(ev,i){
 var active=i===activeEventIdx;
-var evState=JSON.parse(localStorage.getItem(‘cp_checklist_state_’+ev.id)||localStorage.getItem(i===0?‘cp_checklist_state’:’{}’));
+// All events share the same checklist state key - only accurate for active event
+// For non-active events, use progress stored at switch time or just show task count
+var evState = i===activeEventIdx ? getCheckState() : {};
 var evTotal=(ev.timeline||[]).length;
-var evDone=evTotal?Object.keys(evState||{}).filter(function(k){return (evState||{})[k]===true;}).length:0;
+var evDone=evTotal?Object.keys(evState).filter(function(k){return evState[k]===true;}).length:0;
 var isComplete=evTotal>0&&evDone>=evTotal;
+var pct = evTotal ? Math.round(evDone/evTotal*100) : 0;
 var bdr=‘1px solid ‘+(active?‘var(–gold)’:‘var(–mid)’);
-var bdrL=active?‘border-left:3px solid var(–gold);’:’’;
+var bdrL=isComplete?‘border-left:4px solid #52be80;’:active?‘border-left:3px solid var(–gold);’:’’;
 var dt=ev.date?new Date(ev.date+‘T12:00:00’).toLocaleDateString(‘en-US’,{weekday:‘short’,month:‘short’,day:‘numeric’,year:‘numeric’}):‘TBD’;
-var completeBadge=isComplete?’<span style="font-size:0.55rem;color:#52be80;border:1px solid #52be80;padding:1px 6px;border-radius:2px;margin-left:6px">COMPLETE</span>’:’’;
 var div=document.createElement(‘div’);
-div.style.cssText=‘background:var(–blue);border:’+bdr+’;’+bdrL+‘border-radius:2px;padding:14px 16px;cursor:pointer;margin-bottom:6px’;
+div.style.cssText=‘background:’+(isComplete?‘rgba(30,107,58,0.15)’:‘var(–blue)’)+’;border:’+bdr+’;’+bdrL+‘border-radius:2px;padding:14px 16px;cursor:pointer;margin-bottom:6px’;
 div.setAttribute(‘onclick’,‘selectEvent(’+i+’)’);
-div.innerHTML=’<div style="font-size:0.95rem;color:var(--cream);margin-bottom:3px">’+escH(ev.name)+completeBadge+’</div>’+
-‘<div style="font-size:0.65rem;color:var(--muted)">’+dt+’ · ‘+(ev.guests||’?’)+’ guests</div>’;
+var statusHtml = isComplete
+? ‘<div style="display:flex;align-items:center;gap:6px;margin-top:6px"><span style="background:#1e6b3a;color:#fff;font-size:0.6rem;letter-spacing:0.12em;text-transform:uppercase;padding:3px 8px;border-radius:2px;font-weight:600">✓ All Done</span><span style="font-size:0.62rem;color:#52be80">’+evDone+’ of ‘+evTotal+’ tasks complete</span></div>’
+: i===activeEventIdx ? ‘<div style="margin-top:6px"><div style="background:var(--navy);border-radius:2px;height:3px;overflow:hidden"><div style="width:'+pct+'%;height:100%;background:var(--gold);border-radius:2px"></div></div><div style="font-size:0.58rem;color:var(--muted);margin-top:3px">’+evDone+’ of ‘+evTotal+’ tasks</div></div>’
+: ‘<div style="font-size:0.58rem;color:var(--muted);margin-top:4px">’+evTotal+’ tasks</div>’;
+div.innerHTML=’<div style="font-size:0.95rem;color:var(--cream);font-weight:500">’+escH(ev.name)+’</div>’+
+‘<div style="font-size:0.65rem;color:var(--muted);margin-top:2px">’+dt+’ · ‘+(ev.guests||’?’)+’ guests</div>’+statusHtml;
 return div.outerHTML;
 }).join(’’);
 document.getElementById(‘ev-overlay’).classList.add(‘open’);
 }
 function closeEvOverlay(){document.getElementById(‘ev-overlay’).classList.remove(‘open’);}
 function selectEvent(i){
-activeEventIdx=i;localStorage.setItem(‘cp_active_event’,i);
-closeEvOverlay();saveCheckState({});renderChecklist();renderShopping();
+// Save current event’s checklist state before switching
+var curKey = ‘cp_cl_’ + (events[activeEventIdx] && events[activeEventIdx].id ? events[activeEventIdx].id : activeEventIdx);
+localStorage.setItem(curKey, localStorage.getItem(CL_KEY) || ‘{}’);
+// Switch event
+activeEventIdx=i;
+localStorage.setItem(‘cp_active_event’,i);
+// Restore new event’s checklist state
+var newKey = ‘cp_cl_’ + (events[i] && events[i].id ? events[i].id : i);
+var restored = localStorage.getItem(newKey) || ‘{}’;
+localStorage.setItem(CL_KEY, restored);
+closeEvOverlay();renderChecklist();renderShopping();
 }
 function newEventViaChat(){
 closeEvOverlay();showTab(‘chef’,document.getElementById(‘nav-chef’));
@@ -1424,7 +1439,11 @@ localStorage.setItem(‘cp_seeded’,‘1’);
 // Pre-mark all BBQ event tasks as complete since event is done
 var bbqState = {};
 for (var i=0; i<timeline.length; i++) bbqState[i] = true;
-localStorage.setItem(‘cp_checklist_state’, JSON.stringify(bbqState));
+var bbqStateStr = JSON.stringify(bbqState);
+localStorage.setItem(‘cp_checklist_state’, bbqStateStr);
+// Also save under per-event key for when switching events
+var bbqId = events[0] && events[0].id ? events[0].id : ‘0’;
+localStorage.setItem(‘cp_cl_’ + bbqId, bbqStateStr);
 }
 
 // May 16 Event Data
@@ -1597,6 +1616,9 @@ timeline: mayTimeline,
 shoppingList: mayShopping
 });
 saveEvents();
+// Save empty state for May 16 under its event key
+var mayEv = events[events.length-1];
+if (mayEv && mayEv.id) { localStorage.setItem(‘cp_cl_’ + mayEv.id, ‘{}’); }
 }
 
 // Init
