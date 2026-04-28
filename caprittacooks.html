@@ -849,7 +849,9 @@ function openEvOverlay(){
     var active=i===activeEventIdx;
     // All events share the same checklist state key - only accurate for active event
     // For non-active events, use progress stored at switch time or just show task count
-    var evState = i===activeEventIdx ? getCheckState() : {};
+    var evState = i===activeEventIdx ? getCheckState() : (function(){
+      try { return JSON.parse(localStorage.getItem('cp_cl_' + ev.id) || '{}'); } catch(e){ return {}; }
+    })();
     var evTotal=(ev.timeline||[]).length;
     var evDone=evTotal?Object.keys(evState).filter(function(k){return evState[k]===true;}).length:0;
     var isComplete=evTotal>0&&evDone>=evTotal;
