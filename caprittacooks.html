@@ -875,17 +875,28 @@ function openEvOverlay(){
 }
 function closeEvOverlay(){document.getElementById('ev-overlay').classList.remove('open');}
 function selectEvent(i){
-  // Save current event's checklist state before switching
-  var curKey = 'cp_cl_' + (events[activeEventIdx] && events[activeEventIdx].id ? events[activeEventIdx].id : activeEventIdx);
-  localStorage.setItem(curKey, localStorage.getItem(CL_KEY) || '{}');
-  // Switch event
-  activeEventIdx=i;
-  localStorage.setItem('cp_active_event',i);
-  // Restore new event's checklist state
-  var newKey = 'cp_cl_' + (events[i] && events[i].id ? events[i].id : i);
-  var restored = localStorage.getItem(newKey) || '{}';
-  localStorage.setItem(CL_KEY, restored);
-  closeEvOverlay();renderChecklist();renderShopping();
+  if (i === activeEventIdx) { closeEvOverlay(); return; }
+  // Save current event's state to its per-event key
+  var curEv = events[activeEventIdx];
+  if (curEv && curEv.id) {
+    localStorage.setItem('cp_cl_' + curEv.id, localStorage.getItem(CL_KEY) || '{}');
+    localStorage.setItem('cp_ts_' + curEv.id, localStorage.getItem(TS_KEY) || '{}');
+  }
+  // Switch
+  activeEventIdx = i;
+  localStorage.setItem('cp_active_event', i);
+  // Load new event's state
+  var newEv = events[i];
+  if (newEv && newEv.id) {
+    var savedState = localStorage.getItem('cp_cl_' + newEv.id);
+    var savedTs = localStorage.getItem('cp_ts_' + newEv.id);
+    localStorage.setItem(CL_KEY, savedState || '{}');
+    localStorage.setItem(TS_KEY, savedTs || '{}');
+  } else {
+    localStorage.setItem(CL_KEY, '{}');
+    localStorage.setItem(TS_KEY, '{}');
+  }
+  closeEvOverlay(); renderChecklist(); renderShopping();
 }
 function newEventViaChat(){
   closeEvOverlay();showTab('chef',document.getElementById('nav-chef'));
@@ -1714,19 +1725,19 @@ function archiveEvent(idx) {
   (ev.timeline || []).forEach(function(_, i){ state[i] = true; });
   var ts = {};
   (ev.timeline || []).forEach(function(_, i){ ts[i] = Date.now(); });
-  // Save under per-event key
-  var key = 'cp_cl_' + ev.id;
-  localStorage.setItem(key, JSON.stringify(state));
-  localStorage.setItem('cp_ts_' + ev.id, JSON.stringify(ts));
-  // If this is the active event, update the main state too
+  var stateStr = JSON.stringify(state);
+  var tsStr = JSON.stringify(ts);
+  // Always save to per-event key
+  localStorage.setItem('cp_cl_' + ev.id, stateStr);
+  localStorage.setItem('cp_ts_' + ev.id, tsStr);
+  // Only update active keys if this IS the active event
   if (idx === activeEventIdx) {
-    localStorage.setItem(CL_KEY, JSON.stringify(state));
-    localStorage.setItem(TS_KEY, JSON.stringify(ts));
+    localStorage.setItem(CL_KEY, stateStr);
+    localStorage.setItem(TS_KEY, tsStr);
     renderChecklist();
   }
-  // Close overlay and re-open to refresh
   closeEvOverlay();
-  setTimeout(openEvOverlay, 100);
+  setTimeout(openEvOverlay, 150);
 }
 
 
