@@ -860,10 +860,13 @@ function openEvOverlay(){
     var div=document.createElement('div');
     div.style.cssText='background:'+(isComplete?'rgba(30,107,58,0.15)':'var(--blue)')+';border:'+bdr+';'+bdrL+'border-radius:2px;padding:14px 16px;cursor:pointer;margin-bottom:6px';
     div.setAttribute('onclick','selectEvent('+i+')');
+    var archiveBtn = !isComplete
+      ? '<button onclick="event.stopPropagation();archiveEvent('+i+')" style="margin-top:8px;background:none;border:1px solid #52be80;color:#52be80;font-size:0.58rem;padding:4px 10px;border-radius:2px;cursor:pointer;letter-spacing:0.06em">&#10003; Mark All Complete</button>'
+      : '';
     var statusHtml = isComplete
       ? '<div style="display:flex;align-items:center;gap:6px;margin-top:6px"><span style="background:#1e6b3a;color:#fff;font-size:0.6rem;letter-spacing:0.12em;text-transform:uppercase;padding:3px 8px;border-radius:2px;font-weight:600">&#10003; All Done</span><span style="font-size:0.62rem;color:#52be80">'+evDone+' of '+evTotal+' tasks complete</span></div>'
-      : i===activeEventIdx ? '<div style="margin-top:6px"><div style="background:var(--navy);border-radius:2px;height:3px;overflow:hidden"><div style="width:'+pct+'%;height:100%;background:var(--gold);border-radius:2px"></div></div><div style="font-size:0.58rem;color:var(--muted);margin-top:3px">'+evDone+' of '+evTotal+' tasks</div></div>'
-      : '<div style="font-size:0.58rem;color:var(--muted);margin-top:4px">'+evTotal+' tasks</div>';
+      : i===activeEventIdx ? '<div style="margin-top:6px"><div style="background:var(--navy);border-radius:2px;height:3px;overflow:hidden"><div style="width:'+pct+'%;height:100%;background:var(--gold);border-radius:2px"></div></div><div style="font-size:0.58rem;color:var(--muted);margin-top:3px">'+evDone+' of '+evTotal+' tasks</div></div>'+archiveBtn
+      : '<div style="font-size:0.58rem;color:var(--muted);margin-top:4px">'+evTotal+' tasks</div>'+archiveBtn;
     div.innerHTML='<div style="font-size:0.95rem;color:var(--cream);font-weight:500">'+escH(ev.name)+'</div>'+
       '<div style="font-size:0.65rem;color:var(--muted);margin-top:2px">'+dt+' &middot; '+(ev.guests||'?')+' guests</div>'+statusHtml;
     return div.outerHTML;
@@ -1702,6 +1705,31 @@ function importEvent() {
 }
 
 
+
+function archiveEvent(idx) {
+  var ev = events[idx];
+  if (!ev) return;
+  if (!confirm('Mark all tasks in "' + ev.name + '" as complete?')) return;
+  var state = {};
+  (ev.timeline || []).forEach(function(_, i){ state[i] = true; });
+  var ts = {};
+  (ev.timeline || []).forEach(function(_, i){ ts[i] = Date.now(); });
+  // Save under per-event key
+  var key = 'cp_cl_' + ev.id;
+  localStorage.setItem(key, JSON.stringify(state));
+  localStorage.setItem('cp_ts_' + ev.id, JSON.stringify(ts));
+  // If this is the active event, update the main state too
+  if (idx === activeEventIdx) {
+    localStorage.setItem(CL_KEY, JSON.stringify(state));
+    localStorage.setItem(TS_KEY, JSON.stringify(ts));
+    renderChecklist();
+  }
+  // Close overlay and re-open to refresh
+  closeEvOverlay();
+  setTimeout(openEvOverlay, 100);
+}
+
+
 function hardReset() {
   if (!confirm('Clear all app data and start fresh? This cannot be undone.')) return;
   // Clear all capritta keys
@@ -1720,6 +1748,13 @@ function hardReset() {
   window.location.reload();
 }
 
+// Init -- check for clearall URL param
+if (window.location.search.indexOf('clearall=1') !== -1) {
+  var allKeys = [];
+  for (var i = 0; i < localStorage.length; i++) allKeys.push(localStorage.key(i));
+  allKeys.forEach(function(k){ if(k && (k.startsWith('cp_')||k.startsWith('confetti_'))) localStorage.removeItem(k); });
+  window.location.href = window.location.href.replace('?clearall=1','').replace('&clearall=1','');
+}
 // Init
 seedData();
 addMay16Event();
