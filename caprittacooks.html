@@ -1078,9 +1078,9 @@ function openEvOverlay() {
     var active = i === activeEventIdx;
     var total = (ev.timeline||[]).length;
     var state = active ? getActiveState() : (function(){ try { return JSON.parse(localStorage.getItem('ev_state_' + ev.id) || '{}'); } catch(e){ return {}; } })();
-    var done  = active ? Object.keys(state).filter(function(k){ return state[k]===true&&parseInt(k)<total; }).length : 0;
+    var done  = Object.keys(state).filter(function(k){ return state[k]===true&&parseInt(k)<total; }).length;
     var pct   = total ? Math.round(done/total*100) : 0;
-    var complete = active && total > 0 && done >= total;
+    var complete = total > 0 && done >= total;
     var bdr = active ? '1px solid var(--gold)' : '1px solid var(--mid)';
     var bdrL = complete ? 'border-left:4px solid #52be80;' : active ? 'border-left:3px solid var(--gold);' : '';
     var bg = complete ? 'rgba(30,107,58,0.15)' : 'var(--blue)';
@@ -1088,7 +1088,7 @@ function openEvOverlay() {
     var status = complete
       ? '<div style="display:flex;align-items:center;gap:6px;margin-top:6px"><span style="background:#1e6b3a;color:#fff;font-size:0.6rem;letter-spacing:0.12em;text-transform:uppercase;padding:3px 8px;border-radius:2px;font-weight:600">&#10003; All Done</span><span style="font-size:0.62rem;color:#52be80">'+done+' of '+total+'</span></div>'
       : active ? '<div style="margin-top:6px"><div style="background:var(--navy);border-radius:2px;height:3px;overflow:hidden"><div style="width:'+pct+'%;height:100%;background:var(--gold);border-radius:2px"></div></div><div style="font-size:0.58rem;color:var(--muted);margin-top:3px">'+done+' of '+total+' tasks</div></div>'
-      : '<div style="font-size:0.58rem;color:var(--muted);margin-top:4px">'+total+' tasks</div>';
+      : '<div style="font-size:0.58rem;color:var(--muted);margin-top:4px">'+done+' of '+total+' tasks</div>';
     return '<div style="background:'+bg+';border:'+bdr+';'+bdrL+'border-radius:2px;padding:14px 16px;cursor:pointer;margin-bottom:0" onclick="selectEvent('+i+')">' +
       '<div style="font-size:0.95rem;color:var(--cream);font-weight:500">'+escH(ev.name)+'</div>' +
       '<div style="font-size:0.65rem;color:var(--muted);margin-top:2px">'+dt+' &middot; '+(ev.guests||'?')+' guests</div>' +
