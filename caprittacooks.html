@@ -771,15 +771,15 @@ function changeShopCat(id, event) {
     '<button onclick="setCat(\'' + id + '\',\'Buy Ahead\')" style="background:'+(item.when==='Buy Ahead'?'#c9a84c':'#0a1628')+';color:'+(item.when==='Buy Ahead'?'#0a1628':'#f4f0e6')+';border:1px solid #c9a84c;font-size:0.85rem;padding:12px;border-radius:2px;cursor:pointer">Buy Ahead</button>' +
     '<button onclick="setCat(\'' + id + '\',\'Buy Fresh\')" style="background:'+(item.when==='Buy Fresh'?'#52be80':'#0a1628')+';color:'+(item.when==='Buy Fresh'?'#0a1628':'#f4f0e6')+';border:1px solid #52be80;font-size:0.85rem;padding:12px;border-radius:2px;cursor:pointer">Buy Fresh</button>' +
     '<button onclick="setCat(\'' + id + '\',\'Already Sourced\')" style="background:'+(item.when==='Already Sourced'?'#52be80':'#0a1628')+';color:'+(item.when==='Already Sourced'?'#0a1628':'#f4f0e6')+';border:1px solid #52be80;font-size:0.85rem;padding:12px;border-radius:2px;cursor:pointer">Already Sourced</button>' +
-    '<button onclick="document.getElementById(\'cat-popup\').style.display=\'none\'" style="background:none;border:1px solid #1e4d8c;color:#8a9bb0;font-size:0.8rem;padding:10px;border-radius:2px;cursor:pointer;margin-top:4px">Cancel</button>' +
+    '<button onclick="document.getElementById(\'cat-popup\').remove()" style="background:none;border:1px solid #1e4d8c;color:#8a9bb0;font-size:0.8rem;padding:10px;border-radius:2px;cursor:pointer;margin-top:4px">Cancel</button>' +
     '</div></div>';
-  popup.addEventListener('click', function(e){ if(e.target===popup) popup.style.display='none'; });
+  popup.addEventListener('click', function(e){ if(e.target===popup) popup.remove(); });
   document.body.appendChild(popup);
 }
 
 function setCat(id, cat) {
   var popup = document.getElementById('cat-popup');
-  if (popup) popup.style.display = 'none';
+  if (popup) popup.remove();
   var ev = events[activeEventIdx];
   var item = ev.shoppingList && ev.shoppingList.find(function(i){ return i.id === id; });
   if (!item) return;
