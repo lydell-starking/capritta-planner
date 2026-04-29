@@ -849,9 +849,7 @@ function openEvOverlay(){
     var active=i===activeEventIdx;
     // All events share the same checklist state key - only accurate for active event
     // For non-active events, use progress stored at switch time or just show task count
-    var evState = i===activeEventIdx ? getCheckState() : (function(){
-      try { return JSON.parse(localStorage.getItem('cp_cl_' + ev.id) || '{}'); } catch(e){ return {}; }
-    })();
+    var evState = i===activeEventIdx ? getCheckState() : {};
     var evTotal=(ev.timeline||[]).length;
     var evDone=evTotal?Object.keys(evState).filter(function(k){return evState[k]===true;}).length:0;
     var isComplete=evTotal>0&&evDone>=evTotal;
@@ -862,13 +860,10 @@ function openEvOverlay(){
     var div=document.createElement('div');
     div.style.cssText='background:'+(isComplete?'rgba(30,107,58,0.15)':'var(--blue)')+';border:'+bdr+';'+bdrL+'border-radius:2px;padding:14px 16px;cursor:pointer;margin-bottom:6px';
     div.setAttribute('onclick','selectEvent('+i+')');
-    var archiveBtn = !isComplete
-      ? '<button onclick="event.stopPropagation();archiveEvent('+i+')" style="margin-top:8px;background:none;border:1px solid #52be80;color:#52be80;font-size:0.58rem;padding:4px 10px;border-radius:2px;cursor:pointer;letter-spacing:0.06em">&#10003; Mark All Complete</button>'
-      : '';
     var statusHtml = isComplete
       ? '<div style="display:flex;align-items:center;gap:6px;margin-top:6px"><span style="background:#1e6b3a;color:#fff;font-size:0.6rem;letter-spacing:0.12em;text-transform:uppercase;padding:3px 8px;border-radius:2px;font-weight:600">&#10003; All Done</span><span style="font-size:0.62rem;color:#52be80">'+evDone+' of '+evTotal+' tasks complete</span></div>'
-      : i===activeEventIdx ? '<div style="margin-top:6px"><div style="background:var(--navy);border-radius:2px;height:3px;overflow:hidden"><div style="width:'+pct+'%;height:100%;background:var(--gold);border-radius:2px"></div></div><div style="font-size:0.58rem;color:var(--muted);margin-top:3px">'+evDone+' of '+evTotal+' tasks</div></div>'+archiveBtn
-      : '<div style="font-size:0.58rem;color:var(--muted);margin-top:4px">'+evTotal+' tasks</div>'+archiveBtn;
+      : i===activeEventIdx ? '<div style="margin-top:6px"><div style="background:var(--navy);border-radius:2px;height:3px;overflow:hidden"><div style="width:'+pct+'%;height:100%;background:var(--gold);border-radius:2px"></div></div><div style="font-size:0.58rem;color:var(--muted);margin-top:3px">'+evDone+' of '+evTotal+' tasks</div></div>'
+      : '<div style="font-size:0.58rem;color:var(--muted);margin-top:4px">'+evTotal+' tasks</div>';
     div.innerHTML='<div style="font-size:0.95rem;color:var(--cream);font-weight:500">'+escH(ev.name)+'</div>'+
       '<div style="font-size:0.65rem;color:var(--muted);margin-top:2px">'+dt+' &middot; '+(ev.guests||'?')+' guests</div>'+statusHtml;
     return div.outerHTML;
@@ -878,26 +873,8 @@ function openEvOverlay(){
 function closeEvOverlay(){document.getElementById('ev-overlay').classList.remove('open');}
 function selectEvent(i){
   if (i === activeEventIdx) { closeEvOverlay(); return; }
-  // Save current event's state to its per-event key
-  var curEv = events[activeEventIdx];
-  if (curEv && curEv.id) {
-    localStorage.setItem('cp_cl_' + curEv.id, localStorage.getItem(CL_KEY) || '{}');
-    localStorage.setItem('cp_ts_' + curEv.id, localStorage.getItem(TS_KEY) || '{}');
-  }
-  // Switch
   activeEventIdx = i;
   localStorage.setItem('cp_active_event', i);
-  // Load new event's state
-  var newEv = events[i];
-  if (newEv && newEv.id) {
-    var savedState = localStorage.getItem('cp_cl_' + newEv.id);
-    var savedTs = localStorage.getItem('cp_ts_' + newEv.id);
-    localStorage.setItem(CL_KEY, savedState || '{}');
-    localStorage.setItem(TS_KEY, savedTs || '{}');
-  } else {
-    localStorage.setItem(CL_KEY, '{}');
-    localStorage.setItem(TS_KEY, '{}');
-  }
   closeEvOverlay(); renderChecklist(); renderShopping();
 }
 function newEventViaChat(){
@@ -1476,8 +1453,6 @@ function seedData(){
   var bbqStateStr = JSON.stringify(bbqState);
   localStorage.setItem('cp_checklist_state', bbqStateStr);
   // Also save under per-event key for when switching events
-  var bbqId = events[0] && events[0].id ? events[0].id : '0';
-  localStorage.setItem('cp_cl_' + bbqId, bbqStateStr);
 }
 
 
@@ -1648,9 +1623,6 @@ function addMay16Event() {
     shoppingList: mayShopping
   });
   saveEvents();
-  // Save empty state for May 16 under its event key
-  var mayEv = events[events.length-1];
-  if (mayEv && mayEv.id) { localStorage.setItem('cp_cl_' + mayEv.id, '{}'); }
 }
 
 
@@ -1702,9 +1674,6 @@ function importEvent() {
   events.push(newEvent);
   saveEvents();
 
-  // Initialize empty checklist state for new event
-  localStorage.setItem('cp_cl_' + newEvent.id, '{}');
-
   // Switch to new event
   activeEventIdx = events.length - 1;
   localStorage.setItem('cp_active_event', activeEventIdx);
@@ -1719,28 +1688,6 @@ function importEvent() {
 
 
 
-function archiveEvent(idx) {
-  var ev = events[idx];
-  if (!ev) return;
-  if (!confirm('Mark all tasks in "' + ev.name + '" as complete?')) return;
-  var state = {};
-  (ev.timeline || []).forEach(function(_, i){ state[i] = true; });
-  var ts = {};
-  (ev.timeline || []).forEach(function(_, i){ ts[i] = Date.now(); });
-  var stateStr = JSON.stringify(state);
-  var tsStr = JSON.stringify(ts);
-  // Always save to per-event key
-  localStorage.setItem('cp_cl_' + ev.id, stateStr);
-  localStorage.setItem('cp_ts_' + ev.id, tsStr);
-  // Only update active keys if this IS the active event
-  if (idx === activeEventIdx) {
-    localStorage.setItem(CL_KEY, stateStr);
-    localStorage.setItem(TS_KEY, tsStr);
-    renderChecklist();
-  }
-  closeEvOverlay();
-  setTimeout(openEvOverlay, 150);
-}
 
 
 function hardReset() {
