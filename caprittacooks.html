@@ -851,8 +851,8 @@ function openEvOverlay(){
     // For non-active events, use progress stored at switch time or just show task count
     var evState = i===activeEventIdx ? getCheckState() : {};
     var evTotal=(ev.timeline||[]).length;
-    var evDone=evTotal?Object.keys(evState).filter(function(k){return evState[k]===true;}).length:0;
-    var isComplete=evTotal>0&&evDone>=evTotal;
+    var evDone=i===activeEventIdx ? evTotal?Object.keys(evState).filter(function(k){return evState[k]===true;}).length:0 : 0;
+    var isComplete=i===activeEventIdx && evTotal>0&&evDone>=evTotal;
     var pct = evTotal ? Math.round(evDone/evTotal*100) : 0;
     var bdr='1px solid '+(active?'var(--gold)':'var(--mid)');
     var bdrL=isComplete?'border-left:4px solid #52be80;':active?'border-left:3px solid var(--gold);':'';
