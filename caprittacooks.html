@@ -329,7 +329,6 @@ body{background:var(--navy);color:var(--cream);font-family:'IBM Plex Mono',monos
   <button class="btn-gold" style="width:100%;padding:12px;font-size:1rem;margin-bottom:8px" onclick="newEventViaChat()">+ Plan New Event with Chef</button>
   <button onclick="document.getElementById('ev-overlay').classList.remove('open');document.getElementById('import-overlay').classList.add('open')" style="width:100%;padding:12px;font-size:1rem;margin-bottom:10px;background:none;border:1px solid var(--gold);color:var(--gold);font-family:'Bebas Neue',sans-serif;letter-spacing:0.08em;border-radius:2px;cursor:pointer">&#8659; Import from Chef JSON</button>
   <button class="btn-ghost" style="display:block;margin:0 auto" onclick="closeEvOverlay()">Close</button>
-  <button onclick="hardReset()" style="display:block;margin:12px auto 0;background:none;border:1px solid #5a2a2a;color:#f87171;font-family:'IBM Plex Mono',monospace;font-size:0.62rem;padding:8px 20px;border-radius:2px;cursor:pointer;letter-spacing:0.08em">&#9888; Clear All App Data</button>
 </div>
 
 <!-- Import Overlay -->
@@ -1112,12 +1111,14 @@ function openEvOverlay() {
     }
   });
 
-  var archived_section = archived_html
-    ? '<div style="font-size:0.6rem;letter-spacing:0.14em;text-transform:uppercase;color:var(--muted);margin:16px 0 8px;border-top:1px solid var(--blue);padding-top:14px">Archived Events</div>' + archived_html
-    : '';
-
-  list.innerHTML = active_html + archived_section;
+  list.innerHTML = active_html;
   document.getElementById('ev-overlay').classList.add('open');
+  // Inject archived section after the buttons
+  if (archived_html) {
+    var archiveSection = document.createElement('div');
+    archiveSection.innerHTML = '<div style="font-size:0.6rem;letter-spacing:0.14em;text-transform:uppercase;color:var(--muted);margin:16px 0 8px;border-top:1px solid var(--blue);padding-top:14px">Archived Events</div>' + archived_html;
+    document.getElementById('ev-overlay').appendChild(archiveSection);
+  }
 }
 
 function archiveEvent(i) {
