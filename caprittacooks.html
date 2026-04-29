@@ -1164,7 +1164,12 @@ function newEventViaChat() {
 
 // ── Import Event ─────────────────────────────────────────────
 function importEvent() {
-  var raw = document.getElementById('import-json').value.trim().replace(/^`+|`+$/g,'').trim();
+  var raw = document.getElementById('import-json').value
+    .trim()
+    .replace(/^`+|`+$/g,'')
+    .replace(/[\u201c\u201d]/g,'"')
+    .replace(/[\u2018\u2019]/g,"'")
+    .trim();
   var status = document.getElementById('import-status');
   if (!raw) { status.textContent = 'Paste JSON first.'; return; }
   var data;
