@@ -686,6 +686,24 @@ async function fetchEventWeather() {
   } catch(e) {}
 }
 
+function getCountdown(ev) {
+  if (!ev.date || !ev.time) return '';
+  var parts = ev.time.split(':').map(Number);
+  var eventDate = new Date(ev.date + 'T' + ev.time + ':00');
+  var now = new Date();
+  var diff = eventDate - now;
+  if (diff < 0) {
+    var daysAgo = Math.floor(Math.abs(diff) / 86400000);
+    return daysAgo === 0 ? 'Today' : daysAgo + ' day' + (daysAgo !== 1 ? 's' : '') + ' ago';
+  }
+  var days  = Math.floor(diff / 86400000);
+  var hrs   = Math.floor((diff % 86400000) / 3600000);
+  var mins  = Math.floor((diff % 3600000) / 60000);
+  if (days > 0) return days + 'd ' + hrs + 'h ' + mins + 'm';
+  if (hrs > 0)  return hrs + 'h ' + mins + 'm';
+  return mins + ' min';
+}
+
 function updateProgress() {
   var ev = events[activeEventIdx];
   if (!ev) return;
@@ -1131,24 +1149,6 @@ function shareShoppingList() {
 
 
 // ── Event Switcher ──────────────────────────────────────────
-function getCountdown(ev) {
-  if (!ev.date || !ev.time) return '';
-  var parts = ev.time.split(':').map(Number);
-  var eventDate = new Date(ev.date + 'T' + ev.time + ':00');
-  var now = new Date();
-  var diff = eventDate - now;
-  if (diff < 0) {
-    var daysAgo = Math.floor(Math.abs(diff) / 86400000);
-    return daysAgo === 0 ? 'Today' : daysAgo + ' day' + (daysAgo !== 1 ? 's' : '') + ' ago';
-  }
-  var days  = Math.floor(diff / 86400000);
-  var hrs   = Math.floor((diff % 86400000) / 3600000);
-  var mins  = Math.floor((diff % 3600000) / 60000);
-  if (days > 0) return days + 'd ' + hrs + 'h ' + mins + 'm';
-  if (hrs > 0)  return hrs + 'h ' + mins + 'm';
-  return mins + ' min';
-}
-
 function openEvOverlay() {
   var list = document.getElementById('ev-list');
   var active_html = '';
