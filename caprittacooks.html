@@ -1083,7 +1083,16 @@ function openEvOverlay() {
   var active_html = '';
   var archived_html = '';
 
-  events.forEach(function(ev, i){
+  // Sort events by date, earliest first
+  var sorted = events.map(function(ev, i){ return {ev:ev, i:i}; })
+    .sort(function(a, b){
+      var da = a.ev.date ? new Date(a.ev.date) : new Date('9999-01-01');
+      var db = b.ev.date ? new Date(b.ev.date) : new Date('9999-01-01');
+      return da - db;
+    });
+
+  sorted.forEach(function(s){
+    var ev = s.ev; var i = s.i;
     var active   = i === activeEventIdx;
     var archived = ev.archived === true;
     var total    = (ev.timeline||[]).length;
