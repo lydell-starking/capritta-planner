@@ -246,7 +246,8 @@ body{background:var(--navy);color:var(--cream);font-family:'IBM Plex Mono',monos
     <div class="app-event-name" onclick="openEvOverlay()" id="active-event-name">LOADING</div>
   </div>
   <div class="progress-wrap"><div class="progress-fill" id="progress-fill" style="width:0%"></div></div>
-  <div style="display:flex;justify-content:space-between;align-items:center"><div class="progress-label" id="progress-label">0 of 0 tasks</div><div class="progress-label" id="shop-progress-label">0 of 0 items</div></div>
+  <div id="weather-strip" style="display:none;font-size:0.58rem;color:var(--sky);letter-spacing:0.05em;margin-bottom:2px;text-align:center"></div>
+  <div style="display:flex;justify-content:space-between;align-items:center"><div class="progress-label" id="progress-label">0 of 0 tasks</div><div class="progress-label" id="header-countdown" style="color:var(--sky);font-weight:600"></div><div class="progress-label" id="shop-progress-label">0 of 0 items</div></div>
 </header>
 <div class="main" id="main">
   <div class="tab active" id="tab-checklist">
@@ -284,6 +285,15 @@ body{background:var(--navy);color:var(--cream);font-family:'IBM Plex Mono',monos
         <button class="btn-ghost" onclick="toggleAddRecipe()">Cancel</button>
         <span class="parse-status" id="parse-status"></span>
       </div>
+    </div>
+    <div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:12px" id="recipe-filter-btns">
+      <button class="shop-filter-btn active" onclick="recipeFilter('all',this)">All</button>
+      <button class="shop-filter-btn" onclick="recipeFilter('Main',this)">Main</button>
+      <button class="shop-filter-btn" onclick="recipeFilter('Side',this)">Side</button>
+      <button class="shop-filter-btn" onclick="recipeFilter('Dessert',this)">Dessert</button>
+      <button class="shop-filter-btn" onclick="recipeFilter('Drink',this)">Drink</button>
+      <button class="shop-filter-btn" onclick="recipeFilter('Component',this)">Component</button>
+      <button class="shop-filter-btn" onclick="recipeFilter('Bread',this)">Bread</button>
     </div>
     <div class="recipe-grid" id="recipes-body"></div>
   </div>
@@ -649,6 +659,33 @@ function resetChecklist() {
   renderChecklist();
 }
 
+
+// ── Weather ───────────────────────────────────────────────────
+async function fetchEventWeather() {
+  var ev = events[activeEventIdx];
+  if (!ev || !ev.date) return;
+  var eventDate = new Date(ev.date + 'T12:00:00');
+  var now = new Date();
+  var daysUntil = Math.floor((eventDate - now) / 86400000);
+  if (daysUntil < 0 || daysUntil > 7) return; // Only show within 7 days
+  try {
+    // West Melbourne FL coords
+    var resp = await fetch('https://api.open-meteo.com/v1/forecast?latitude=28.0836&longitude=-80.6614&daily=temperature_2m_max,temperature_2m_min,precipitation_probability_max,weathercode&temperature_unit=fahrenheit&timezone=America%2FNew_York&forecast_days=8');
+    var data = await resp.json();
+    if (!data.daily) return;
+    var idx = data.daily.time.indexOf(ev.date);
+    if (idx === -1) return;
+    var hi  = Math.round(data.daily.temperature_2m_max[idx]);
+    var lo  = Math.round(data.daily.temperature_2m_min[idx]);
+    var pop = data.daily.precipitation_probability_max[idx];
+    var code = data.daily.weathercode[idx];
+    var icon = code <= 1 ? '☀️' : code <= 3 ? '⛅' : code <= 51 ? '🌦' : code <= 67 ? '🌧' : code <= 77 ? '🌨' : '⛈';
+    var weather = icon + ' ' + hi + '°/' + lo + '° · ' + pop + '% rain';
+    var el = document.getElementById('weather-strip');
+    if (el) { el.textContent = weather; el.style.display = 'block'; }
+  } catch(e) {}
+}
+
 function updateProgress() {
   var ev = events[activeEventIdx];
   if (!ev) return;
@@ -659,6 +696,9 @@ function updateProgress() {
   var pct   = total ? Math.round(done / total * 100) : 0;
   document.getElementById('progress-fill').style.width = pct + '%';
   document.getElementById('progress-label').textContent = done + ' of ' + total + ' tasks';
+  // Countdown in middle
+  var cdEl = document.getElementById('header-countdown');
+  if (cdEl) cdEl.textContent = getCountdown(ev);
   // Shopping count
   var list = ev.shoppingList || [];
   var shopTotal = list.length;
@@ -888,8 +928,21 @@ function saveTaskEdit() {
 }
 
 
+var recipeFilter_cur = 'all';
+
+function recipeFilter(cat, btn) {
+  recipeFilter_cur = cat;
+  document.querySelectorAll('#recipe-filter-btns .shop-filter-btn').forEach(function(b){ b.classList.remove('active'); });
+  btn.classList.add('active');
+  renderRecipes();
+}
+
 function renderRecipes() {
-  var html = recipes.filter(function(r){ return !r.hidden; }).map(function(r){
+  var html = recipes.filter(function(r){
+    if (r.hidden) return false;
+    if (recipeFilter_cur === 'all') return true;
+    return (r.category || '') === recipeFilter_cur;
+  }).map(function(r){
     var icons = {'Main':'🍖','Side':'🥗','Dessert':'🍋','Drink':'🥤','Component':'🧂','Snack':'🥜'};
     var icon = icons[r.category] || '🍽';
     return '<div class="recipe-card" onclick="openRecipeDetail(\'' + r.id + '\')">' +
