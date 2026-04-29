@@ -1141,8 +1141,12 @@ function openEvOverlay() {
         '<div style="background:'+bg+';border:'+bdr+';'+bdrL+'border-radius:2px;padding:14px 16px;cursor:pointer;margin-bottom:4px" onclick="selectEvent('+i+')">' +
         '<div style="font-size:0.95rem;color:var(--cream);font-weight:500">'+escH(ev.name)+'</div>' +
         '<div style="font-size:0.65rem;color:var(--muted);margin-top:2px">'+dt+' &middot; '+(ev.guests||'?')+' guests</div>' +
-        '<div style="font-size:0.7rem;color:var(--sky);font-weight:600;margin-top:3px">&#9201; '+getCountdown(ev)+'</div>' +
-        status + '</div>';
+        '<div style="display:flex;align-items:flex-start;justify-content:space-between;margin-top:4px">' +
+        '<div>' + status + '</div>' +
+        '<div style="background:var(--navy);border:1px solid var(--sky);border-radius:3px;padding:4px 8px;text-align:center;flex-shrink:0;margin-left:10px">' +
+        '<div style="font-size:0.55rem;color:var(--muted);letter-spacing:0.1em;text-transform:uppercase">Until Event</div>' +
+        '<div style="font-size:0.75rem;color:var(--sky);font-weight:600;white-space:nowrap">'+getCountdown(ev)+'</div>' +
+        '</div></div>';
     }
   });
 
