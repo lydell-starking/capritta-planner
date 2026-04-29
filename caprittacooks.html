@@ -1078,6 +1078,24 @@ function shareShoppingList() {
 
 
 // ── Event Switcher ──────────────────────────────────────────
+function getCountdown(ev) {
+  if (!ev.date || !ev.time) return '';
+  var parts = ev.time.split(':').map(Number);
+  var eventDate = new Date(ev.date + 'T' + ev.time + ':00');
+  var now = new Date();
+  var diff = eventDate - now;
+  if (diff < 0) {
+    var daysAgo = Math.floor(Math.abs(diff) / 86400000);
+    return daysAgo === 0 ? 'Today' : daysAgo + ' day' + (daysAgo !== 1 ? 's' : '') + ' ago';
+  }
+  var days  = Math.floor(diff / 86400000);
+  var hrs   = Math.floor((diff % 86400000) / 3600000);
+  var mins  = Math.floor((diff % 3600000) / 60000);
+  if (days > 0) return days + 'd ' + hrs + 'h ' + mins + 'm';
+  if (hrs > 0)  return hrs + 'h ' + mins + 'm';
+  return mins + ' min';
+}
+
 function openEvOverlay() {
   var list = document.getElementById('ev-list');
   var active_html = '';
@@ -1123,6 +1141,7 @@ function openEvOverlay() {
         '<div style="background:'+bg+';border:'+bdr+';'+bdrL+'border-radius:2px;padding:14px 16px;cursor:pointer;margin-bottom:4px" onclick="selectEvent('+i+')">' +
         '<div style="font-size:0.95rem;color:var(--cream);font-weight:500">'+escH(ev.name)+'</div>' +
         '<div style="font-size:0.65rem;color:var(--muted);margin-top:2px">'+dt+' &middot; '+(ev.guests||'?')+' guests</div>' +
+        '<div style="font-size:0.7rem;color:var(--gold);font-weight:600;margin-top:3px">&#9201; '+getCountdown(ev)+'</div>' +
         status + '</div>';
     }
   });
@@ -1141,6 +1160,12 @@ function openEvOverlay() {
     document.getElementById('ev-overlay').appendChild(archiveSection);
   }
   document.getElementById('ev-overlay').classList.add('open');
+  // Refresh countdown every minute while overlay is open
+  if (window._countdownTimer) clearInterval(window._countdownTimer);
+  window._countdownTimer = setInterval(function(){
+    if (document.getElementById('ev-overlay').classList.contains('open')) openEvOverlay();
+    else clearInterval(window._countdownTimer);
+  }, 60000);
 }
 
 function toggleArchived() {
