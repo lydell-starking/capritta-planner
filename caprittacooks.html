@@ -1074,28 +1074,75 @@ function shareShoppingList() {
 // ── Event Switcher ──────────────────────────────────────────
 function openEvOverlay() {
   var list = document.getElementById('ev-list');
-  list.innerHTML = events.map(function(ev, i){
-    var active = i === activeEventIdx;
-    var total = (ev.timeline||[]).length;
-    var state = active ? getActiveState() : (function(){ try { return JSON.parse(localStorage.getItem('ev_state_' + ev.id) || '{}'); } catch(e){ return {}; } })();
-    var done  = Object.keys(state).filter(function(k){ return state[k]===true&&parseInt(k)<total; }).length;
-    var pct   = total ? Math.round(done/total*100) : 0;
+  var active_html = '';
+  var archived_html = '';
+
+  events.forEach(function(ev, i){
+    var active   = i === activeEventIdx;
+    var archived = ev.archived === true;
+    var total    = (ev.timeline||[]).length;
+    var state    = active ? getActiveState() : (function(){ try { return JSON.parse(localStorage.getItem('ev_state_' + ev.id) || '{}'); } catch(e){ return {}; } })();
+    var done     = Object.keys(state).filter(function(k){ return state[k]===true&&parseInt(k)<total; }).length;
+    var pct      = total ? Math.round(done/total*100) : 0;
     var complete = total > 0 && done >= total;
-    var bdr = active ? '1px solid var(--gold)' : '1px solid var(--mid)';
-    var bdrL = complete ? 'border-left:4px solid #52be80;' : active ? 'border-left:3px solid var(--gold);' : '';
-    var bg = complete ? 'rgba(30,107,58,0.15)' : 'var(--blue)';
-    var dt = ev.date ? new Date(ev.date+'T12:00:00').toLocaleDateString('en-US',{weekday:'short',month:'short',day:'numeric',year:'numeric'}) : 'TBD';
-    var status = complete
-      ? '<div style="display:flex;align-items:center;gap:6px;margin-top:6px"><span style="background:#1e6b3a;color:#fff;font-size:0.6rem;letter-spacing:0.12em;text-transform:uppercase;padding:3px 8px;border-radius:2px;font-weight:600">&#10003; All Done</span><span style="font-size:0.62rem;color:#52be80">'+done+' of '+total+'</span></div>'
-      : active ? '<div style="margin-top:6px"><div style="background:var(--navy);border-radius:2px;height:3px;overflow:hidden"><div style="width:'+pct+'%;height:100%;background:var(--gold);border-radius:2px"></div></div><div style="font-size:0.58rem;color:var(--muted);margin-top:3px">'+done+' of '+total+' tasks</div></div>'
-      : '<div style="font-size:0.58rem;color:var(--muted);margin-top:4px">'+done+' of '+total+' tasks</div>';
-    return '<div style="background:'+bg+';border:'+bdr+';'+bdrL+'border-radius:2px;padding:14px 16px;cursor:pointer;margin-bottom:0" onclick="selectEvent('+i+')">' +
-      '<div style="font-size:0.95rem;color:var(--cream);font-weight:500">'+escH(ev.name)+'</div>' +
-      '<div style="font-size:0.65rem;color:var(--muted);margin-top:2px">'+dt+' &middot; '+(ev.guests||'?')+' guests</div>' +
-      status + '</div>';
-  }).join('');
+    var dt       = ev.date ? new Date(ev.date+'T12:00:00').toLocaleDateString('en-US',{weekday:'short',month:'short',day:'numeric',year:'numeric'}) : 'TBD';
+
+    if (archived) {
+      archived_html +=
+        '<div style="background:rgba(10,22,40,0.6);border:1px solid var(--mid);border-left:3px solid #52be80;border-radius:2px;padding:10px 14px;cursor:pointer;margin-bottom:4px;opacity:0.7" onclick="selectEvent('+i+')">' +
+        '<div style="display:flex;align-items:center;justify-content:space-between">' +
+        '<div><div style="font-size:0.85rem;color:var(--cream)">'+escH(ev.name)+'</div>' +
+        '<div style="font-size:0.6rem;color:var(--muted);margin-top:2px">'+dt+' &middot; '+done+' of '+total+' tasks</div></div>' +
+        '<span style="font-size:0.55rem;color:#52be80;border:1px solid #52be80;padding:2px 6px;border-radius:2px">ARCHIVED</span></div>' +
+        '<button onclick="event.stopPropagation();unarchiveEvent('+i+')" style="margin-top:6px;background:none;border:1px solid var(--mid);color:var(--muted);font-size:0.58rem;padding:3px 8px;border-radius:2px;cursor:pointer">Restore</button>' +
+        '</div>';
+    } else {
+      var bdr  = active ? '1px solid var(--gold)' : '1px solid var(--mid)';
+      var bdrL = complete ? 'border-left:4px solid #52be80;' : active ? 'border-left:3px solid var(--gold);' : '';
+      var bg   = complete ? 'rgba(30,107,58,0.15)' : 'var(--blue)';
+      var status = complete
+        ? '<div style="display:flex;align-items:center;justify-content:space-between;margin-top:6px"><div style="display:flex;align-items:center;gap:6px"><span style="background:#1e6b3a;color:#fff;font-size:0.6rem;letter-spacing:0.12em;text-transform:uppercase;padding:3px 8px;border-radius:2px;font-weight:600">&#10003; All Done</span><span style="font-size:0.62rem;color:#52be80">'+done+' of '+total+'</span></div><button onclick="event.stopPropagation();archiveEvent('+i+')" style="background:none;border:1px solid #52be80;color:#52be80;font-size:0.58rem;padding:3px 8px;border-radius:2px;cursor:pointer">Archive</button></div>'
+        : active ? '<div style="margin-top:6px"><div style="background:var(--navy);border-radius:2px;height:3px;overflow:hidden"><div style="width:'+pct+'%;height:100%;background:var(--gold);border-radius:2px"></div></div><div style="font-size:0.58rem;color:var(--muted);margin-top:3px">'+done+' of '+total+' tasks</div></div>'
+        : '<div style="font-size:0.58rem;color:var(--muted);margin-top:4px">'+done+' of '+total+' tasks</div>';
+      active_html +=
+        '<div style="background:'+bg+';border:'+bdr+';'+bdrL+'border-radius:2px;padding:14px 16px;cursor:pointer;margin-bottom:4px" onclick="selectEvent('+i+')">' +
+        '<div style="font-size:0.95rem;color:var(--cream);font-weight:500">'+escH(ev.name)+'</div>' +
+        '<div style="font-size:0.65rem;color:var(--muted);margin-top:2px">'+dt+' &middot; '+(ev.guests||'?')+' guests</div>' +
+        status + '</div>';
+    }
+  });
+
+  var archived_section = archived_html
+    ? '<div style="font-size:0.6rem;letter-spacing:0.14em;text-transform:uppercase;color:var(--muted);margin:16px 0 8px;border-top:1px solid var(--blue);padding-top:14px">Archived Events</div>' + archived_html
+    : '';
+
+  list.innerHTML = active_html + archived_section;
   document.getElementById('ev-overlay').classList.add('open');
 }
+
+function archiveEvent(i) {
+  if (!confirm('Archive "' + events[i].name + '"? It will move to the archived section. Recipes stay in the library.')) return;
+  events[i].archived = true;
+  saveEvents();
+  // If archiving the active event, switch to first non-archived event
+  if (i === activeEventIdx) {
+    var next = events.findIndex(function(e, idx){ return !e.archived && idx !== i; });
+    if (next >= 0) {
+      activeEventIdx = next;
+      localStorage.setItem('cp_active_event', next);
+      renderChecklist();
+      renderShopping();
+    }
+  }
+  openEvOverlay();
+}
+
+function unarchiveEvent(i) {
+  events[i].archived = false;
+  saveEvents();
+  openEvOverlay();
+}
+
 
 function closeEvOverlay() { document.getElementById('ev-overlay').classList.remove('open'); }
 
