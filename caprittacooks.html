@@ -468,7 +468,11 @@ function toggleTask(idx) {
   var ts=getTaskTs();if(nowDone)ts[idx]=Date.now();else delete ts[idx];
   localStorage.setItem(TS_KEY,JSON.stringify(ts));
   if(navigator.vibrate)navigator.vibrate(30);
-  saveCheckState(state);renderChecklist();maybeConfetti();
+  saveCheckState(state);
+  // Also persist to per-event key immediately
+  var _ev = events[activeEventIdx];
+  if (_ev && _ev.id) localStorage.setItem('cp_cl_' + _ev.id, JSON.stringify(state));
+  renderChecklist();maybeConfetti();
 }
 
 function resetChecklist(){if(!confirm('Mark all tasks incomplete and clear completion times?'))return;saveCheckState({});localStorage.removeItem(TS_KEY);renderChecklist();}
@@ -849,10 +853,15 @@ function openEvOverlay(){
     var active=i===activeEventIdx;
     // All events share the same checklist state key - only accurate for active event
     // For non-active events, use progress stored at switch time or just show task count
-    var evState = i===activeEventIdx ? getCheckState() : {};
+    var evState;
+    if (i===activeEventIdx) {
+      evState = getCheckState();
+    } else {
+      try { evState = JSON.parse(localStorage.getItem('cp_cl_'+(ev.id||'')) || '{}'); } catch(e){ evState={}; }
+    }
     var evTotal=(ev.timeline||[]).length;
-    var evDone=i===activeEventIdx ? evTotal?Object.keys(evState).filter(function(k){return evState[k]===true;}).length:0 : 0;
-    var isComplete=i===activeEventIdx && evTotal>0&&evDone>=evTotal;
+    var evDone=evTotal?Object.keys(evState).filter(function(k){return evState[k]===true&&parseInt(k)<evTotal;}).length:0;
+    var isComplete=evTotal>0&&evDone>=evTotal;
     var pct = evTotal ? Math.round(evDone/evTotal*100) : 0;
     var bdr='1px solid '+(active?'var(--gold)':'var(--mid)');
     var bdrL=isComplete?'border-left:4px solid #52be80;':active?'border-left:3px solid var(--gold);':'';
@@ -871,10 +880,33 @@ function openEvOverlay(){
   document.getElementById('ev-overlay').classList.add('open');
 }
 function closeEvOverlay(){document.getElementById('ev-overlay').classList.remove('open');}
+function saveActiveState() {
+  var ev = events[activeEventIdx];
+  if (ev && ev.id) {
+    localStorage.setItem('cp_cl_' + ev.id, localStorage.getItem(CL_KEY) || '{}');
+    localStorage.setItem('cp_ts_' + ev.id, localStorage.getItem(TS_KEY) || '{}');
+  }
+}
+
+function loadEventState(i) {
+  var ev = events[i];
+  if (ev && ev.id) {
+    var st = localStorage.getItem('cp_cl_' + ev.id);
+    var ts = localStorage.getItem('cp_ts_' + ev.id);
+    localStorage.setItem(CL_KEY, st !== null ? st : '{}');
+    localStorage.setItem(TS_KEY, ts !== null ? ts : '{}');
+  } else {
+    localStorage.setItem(CL_KEY, '{}');
+    localStorage.setItem(TS_KEY, '{}');
+  }
+}
+
 function selectEvent(i){
   if (i === activeEventIdx) { closeEvOverlay(); return; }
+  saveActiveState();
   activeEventIdx = i;
   localStorage.setItem('cp_active_event', i);
+  loadEventState(i);
   closeEvOverlay(); renderChecklist(); renderShopping();
 }
 function newEventViaChat(){
@@ -1447,6 +1479,13 @@ function seedData(){
   saveCheckState(initState);
   localStorage.setItem('cp_active_event','0');
   localStorage.setItem('cp_seeded','1');
+  // Pre-mark all BBQ tasks complete
+  var _bbqState = {};
+  for (var _i=0; _i<timeline.length; _i++) _bbqState[_i] = true;
+  var _bbqStr = JSON.stringify(_bbqState);
+  localStorage.setItem(CL_KEY, _bbqStr);
+  // Save under per-event key once event ID is known
+  if (events[0] && events[0].id) localStorage.setItem('cp_cl_' + events[0].id, _bbqStr);
   // Pre-mark all BBQ event tasks as complete since event is done
   var bbqState = {};
   for (var i=0; i<timeline.length; i++) bbqState[i] = true;
@@ -1623,6 +1662,9 @@ function addMay16Event() {
     shoppingList: mayShopping
   });
   saveEvents();
+  // Initialize empty per-event state for May 16
+  var _mayEv = events[events.length-1];
+  if (_mayEv && _mayEv.id) localStorage.setItem('cp_cl_' + _mayEv.id, '{}');
 }
 
 
@@ -1707,6 +1749,17 @@ function hardReset() {
   // Reload
   window.location.reload();
 }
+
+// On init, load the active event's saved state
+(function(){
+  var ev = events[activeEventIdx];
+  if (ev && ev.id) {
+    var saved = localStorage.getItem('cp_cl_' + ev.id);
+    if (saved !== null) localStorage.setItem(CL_KEY, saved);
+    var savedTs = localStorage.getItem('cp_ts_' + ev.id);
+    if (savedTs !== null) localStorage.setItem(TS_KEY, savedTs);
+  }
+})();
 
 // Init -- check for clearall URL param
 if (window.location.search.indexOf('clearall=1') !== -1) {
