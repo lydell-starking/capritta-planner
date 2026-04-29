@@ -242,11 +242,11 @@ body{background:var(--navy);color:var(--cream);font-family:'IBM Plex Mono',monos
 <div class="offline-badge" id="offline-badge">OFFLINE</div>
 <header class="app-header">
   <div class="app-header-top">
-    <div class="app-title"><span>C</span>APRITTA</div>
+    <div class="app-title"><span>C</span>AP<span>C</span>OOKS</div>
     <div class="app-event-name" onclick="openEvOverlay()" id="active-event-name">LOADING</div>
   </div>
   <div class="progress-wrap"><div class="progress-fill" id="progress-fill" style="width:0%"></div></div>
-  <div class="progress-label" id="progress-label">0 of 0 tasks complete</div>
+  <div style="display:flex;justify-content:space-between;align-items:center"><div class="progress-label" id="progress-label">0 of 0 tasks</div><div class="progress-label" id="shop-progress-label">0 of 0 items</div></div>
 </header>
 <div class="main" id="main">
   <div class="tab active" id="tab-checklist">
@@ -658,7 +658,13 @@ function updateProgress() {
   var done  = tasks.filter(function(_, i){ return state[i] === true; }).length;
   var pct   = total ? Math.round(done / total * 100) : 0;
   document.getElementById('progress-fill').style.width = pct + '%';
-  document.getElementById('progress-label').textContent = done + ' of ' + total + ' complete';
+  document.getElementById('progress-label').textContent = done + ' of ' + total + ' tasks';
+  // Shopping count
+  var list = ev.shoppingList || [];
+  var shopTotal = list.length;
+  var shopDone  = list.filter(function(i){ return i.checked; }).length;
+  var shopEl = document.getElementById('shop-progress-label');
+  if (shopEl) shopEl.textContent = shopDone + ' of ' + shopTotal + ' items';
 }
 
 
@@ -752,6 +758,7 @@ function toggleShopItem(id) {
     if (ck) ck.style.opacity = item.checked ? '1' : '0';
   }
   updateShopStats();
+  updateProgress();
 }
 
 function changeShopCat(id, event) {
