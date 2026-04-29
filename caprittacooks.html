@@ -1086,8 +1086,8 @@ function openEvOverlay() {
   // Sort events by date, earliest first
   var sorted = events.map(function(ev, i){ return {ev:ev, i:i}; })
     .sort(function(a, b){
-      var da = a.ev.date ? new Date(a.ev.date) : new Date('9999-01-01');
-      var db = b.ev.date ? new Date(b.ev.date) : new Date('9999-01-01');
+      var da = a.ev.date ? new Date(a.ev.date+'T12:00:00') : new Date('9999-01-01');
+      var db = b.ev.date ? new Date(b.ev.date+'T12:00:00') : new Date('9999-01-01');
       return da - db;
     });
 
