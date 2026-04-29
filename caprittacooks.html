@@ -1112,13 +1112,29 @@ function openEvOverlay() {
   });
 
   list.innerHTML = active_html;
-  document.getElementById('ev-overlay').classList.add('open');
-  // Inject archived section after the buttons
+  // Remove any existing archived section first
+  var existing = document.getElementById('archived-section');
+  if (existing) existing.remove();
+  // Add collapsed archived toggle if needed
   if (archived_html) {
     var archiveSection = document.createElement('div');
-    archiveSection.innerHTML = '<div style="font-size:0.6rem;letter-spacing:0.14em;text-transform:uppercase;color:var(--muted);margin:16px 0 8px;border-top:1px solid var(--blue);padding-top:14px">Archived Events</div>' + archived_html;
+    archiveSection.id = 'archived-section';
+    archiveSection.innerHTML =
+      '<button onclick="toggleArchived()" id="archived-toggle" style="display:block;margin:12px auto 0;background:none;border:1px solid var(--blue);color:var(--muted);font-family:\'IBM Plex Mono\',monospace;font-size:0.62rem;padding:6px 16px;border-radius:2px;cursor:pointer;letter-spacing:0.08em">&#9660; Show Archived (' + events.filter(function(e){return e.archived;}).length + ')</button>' +
+      '<div id="archived-list" style="display:none;margin-top:10px">' + archived_html + '</div>';
     document.getElementById('ev-overlay').appendChild(archiveSection);
   }
+  document.getElementById('ev-overlay').classList.add('open');
+}
+
+function toggleArchived() {
+  var list = document.getElementById('archived-list');
+  var btn  = document.getElementById('archived-toggle');
+  if (!list || !btn) return;
+  var open = list.style.display !== 'none';
+  list.style.display = open ? 'none' : 'block';
+  var count = events.filter(function(e){ return e.archived; }).length;
+  btn.textContent = (open ? '▼' : '▲') + ' ' + (open ? 'Show' : 'Hide') + ' Archived (' + count + ')';
 }
 
 function archiveEvent(i) {
@@ -1720,6 +1736,23 @@ function seedData() {
   localStorage.setItem('cp_seeded', '1');
 }
 
+
+// Deduplicate events by name -- keep the last one of each name
+(function(){
+  var seen = {};
+  var deduped = [];
+  for (var i = events.length - 1; i >= 0; i--) {
+    if (!seen[events[i].name]) {
+      seen[events[i].name] = true;
+      deduped.unshift(events[i]);
+    }
+  }
+  if (deduped.length !== events.length) {
+    events = deduped;
+    saveEvents();
+    if (activeEventIdx >= events.length) activeEventIdx = 0;
+  }
+})();
 
 // ── Init ─────────────────────────────────────────────────────
 seedData();
