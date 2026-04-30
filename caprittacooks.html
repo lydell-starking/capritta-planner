@@ -238,10 +238,26 @@ body{background:var(--navy);color:var(--cream);font-family:'IBM Plex Mono',monos
 .offline-badge.show{display:block}
 
 @media print {
+  html, body { height:auto !important; overflow:visible !important; }
   body > *:not(#menu-overlay) { display:none !important; }
-  #menu-overlay { display:block !important; position:static !important; padding:20px !important; }
-  button { display:none !important; }
+  #menu-overlay {
+    display:block !important;
+    position:relative !important;
+    inset:auto !important;
+    overflow:visible !important;
+    padding:12px 20px !important;
+    height:auto !important;
+  }
   #menu-overlay > div:first-child { display:none !important; }
+  #menu-content {
+    transform-origin:top left;
+    width:100% !important;
+  }
+  @page {
+    margin:0.5in;
+    size:letter portrait;
+  }
+  * { -webkit-print-color-adjust:exact !important; print-color-adjust:exact !important; }
 }
 </style>
 </head>
@@ -783,7 +799,23 @@ function closeMenu() {
 }
 
 function printMenu() {
+  // Scale menu content to fit one page
+  var content = document.getElementById('menu-content');
+  var pageHeight = 900; // approximate printable height in px
+  var contentHeight = content.scrollHeight;
+  if (contentHeight > pageHeight) {
+    var scale = pageHeight / contentHeight;
+    content.style.transform = 'scale(' + scale + ')';
+    content.style.transformOrigin = 'top left';
+    content.style.width = (100 / scale) + '%';
+  }
   window.print();
+  // Reset after print
+  setTimeout(function(){
+    content.style.transform = '';
+    content.style.transformOrigin = '';
+    content.style.width = '';
+  }, 1000);
 }
 
 function shareMenuImage() {
