@@ -1470,7 +1470,8 @@ function importEvent() {
     name: data.name, date: data.date,
     time: data.time||'17:00', guests: data.guests||0, venue: data.venue||'',
     timeline: (data.timeline||[]).map(function(t){ return Object.assign({},t,{done:false}); }),
-    shoppingList: (data.shoppingList||[]).map(function(i){ return Object.assign({id:uid(),checked:false},i); })
+    shoppingList: (data.shoppingList||[]).map(function(i){ return Object.assign({id:uid(),checked:false},i); }),
+    menu: data.menu || []
   };
   if (data.recipes && data.recipes.length) {
     data.recipes.forEach(function(r){ if (!recipes.find(function(x){return x.id===r.id;})) recipes.push(r); });
