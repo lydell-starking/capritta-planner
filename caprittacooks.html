@@ -236,6 +236,13 @@ body{background:var(--navy);color:var(--cream);font-family:'IBM Plex Mono',monos
   font-family:'IBM Plex Mono',monospace;font-size:0.58rem;padding:3px 8px;
   border-radius:2px;z-index:9999;display:none;letter-spacing:0.08em}
 .offline-badge.show{display:block}
+
+@media print {
+  body > *:not(#menu-overlay) { display:none !important; }
+  #menu-overlay { display:block !important; position:static !important; padding:20px !important; }
+  button { display:none !important; }
+  #menu-overlay > div:first-child { display:none !important; }
+}
 </style>
 </head>
 <body>
@@ -342,6 +349,31 @@ body{background:var(--navy);color:var(--cream);font-family:'IBM Plex Mono',monos
 </div>
 
 <!-- Import Overlay -->
+<div id="menu-overlay" style="display:none;position:fixed;inset:0;background:#fff;z-index:500;overflow-y:auto;padding:32px 28px 48px;font-family:'IBM Plex Mono',monospace">
+  <!-- Header -->
+  <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:24px">
+    <div style="font-family:'Bebas Neue',sans-serif;font-size:1rem;letter-spacing:0.1em;color:#0a1628"><span style="color:#c9a84c">C</span>AP<span style="color:#c9a84c">C</span>OOKS</div>
+    <div style="display:flex;gap:8px">
+      <button onclick="shareMenuImage()" style="background:#0a1628;color:#f4f0e6;border:none;font-family:'IBM Plex Mono',monospace;font-size:0.6rem;letter-spacing:0.08em;padding:6px 12px;border-radius:2px;cursor:pointer">&#8679; Image</button>
+      <button onclick="printMenu()" style="background:#c9a84c;color:#0a1628;border:none;font-family:'IBM Plex Mono',monospace;font-size:0.6rem;letter-spacing:0.08em;padding:6px 12px;border-radius:2px;cursor:pointer">&#128438; Print</button>
+      <button onclick="closeMenu()" style="background:none;border:1px solid #d0c9bb;color:#8a9bb0;font-family:'IBM Plex Mono',monospace;font-size:0.6rem;padding:6px 12px;border-radius:2px;cursor:pointer">Close</button>
+    </div>
+  </div>
+  <!-- Menu content -->
+  <div id="menu-content">
+    <!-- Event header -->
+    <div id="menu-event-header" style="text-align:center;margin-bottom:20px"></div>
+    <!-- Decorative divider -->
+    <div style="display:flex;align-items:center;gap:10px;margin-bottom:24px">
+      <div style="flex:1;height:1px;background:linear-gradient(90deg,transparent,#c9a84c)"></div>
+      <span style="color:#c9a84c;font-size:0.7rem">&#9670;</span>
+      <div style="flex:1;height:1px;background:linear-gradient(90deg,#c9a84c,transparent)"></div>
+    </div>
+    <!-- Menu sections -->
+    <div id="menu-sections"></div>
+  </div>
+</div>
+
 <div class="overlay" id="import-overlay">
   <h2>Import Event from Chef</h2>
   <div style="font-family:'IBM Plex Mono',monospace;font-size:0.72rem;color:var(--sky);margin-bottom:16px;line-height:1.7">Plan your event with Claude, then paste the JSON block here.</div>
@@ -685,6 +717,100 @@ async function fetchEventWeather() {
     if (el) { el.textContent = weather; el.style.display = 'block'; }
   } catch(e) {}
 }
+
+// ── Menu ──────────────────────────────────────────────────────
+function openMenu(i) {
+  var ev = events[i];
+  if (!ev || !ev.menu || !ev.menu.length) return;
+  closeEvOverlay();
+
+  // Build event header
+  var dt = '';
+  if (ev.date) {
+    var d = new Date(ev.date + 'T12:00:00');
+    dt = d.toLocaleDateString('en-US', {weekday:'long',month:'long',day:'numeric',year:'numeric'});
+  }
+  if (ev.time) {
+    var tp = ev.time.split(':').map(Number);
+    var hr = tp[0] > 12 ? tp[0]-12 : tp[0]||12;
+    var mn = tp[1] < 10 ? '0'+tp[1] : tp[1];
+    var ampm = tp[0] >= 12 ? 'PM' : 'AM';
+    dt += ' \u00b7 ' + hr + ':' + mn + ' ' + ampm;
+  }
+
+  document.getElementById('menu-event-header').innerHTML =
+    '<div style="font-family:\'Bebas Neue\',sans-serif;font-size:2rem;letter-spacing:0.08em;color:#0a1628;line-height:1.1;margin-bottom:8px">' + escH(ev.name.toUpperCase()) + '</div>' +
+    (dt ? '<div style="font-size:0.72rem;color:#8a9bb0;letter-spacing:0.08em">' + escH(dt) + '</div>' : '');
+
+  // Build menu sections
+  var sectionOrder = ['Starters','Snacks','Starters & Snacks','Mains','Sides','Desserts','Drinks'];
+  var groups = {};
+  ev.menu.forEach(function(item){
+    var sec = item.section || 'Other';
+    if (!groups[sec]) groups[sec] = [];
+    groups[sec].push(item);
+  });
+
+  // Sort sections by fixed order
+  var orderedKeys = Object.keys(groups).sort(function(a, b){
+    var ai = sectionOrder.findIndex(function(s){ return s.toLowerCase() === a.toLowerCase(); });
+    var bi = sectionOrder.findIndex(function(s){ return s.toLowerCase() === b.toLowerCase(); });
+    if (ai === -1) ai = 99;
+    if (bi === -1) bi = 99;
+    return ai - bi;
+  });
+
+  var html = '';
+  orderedKeys.forEach(function(sec){
+    html += '<div style="margin-bottom:24px">';
+    html += '<div style="font-family:\'Bebas Neue\',sans-serif;font-size:0.9rem;letter-spacing:0.2em;color:#c9a84c;text-transform:uppercase;border-bottom:1px solid #e8e2d8;padding-bottom:4px;margin-bottom:12px">' + escH(sec) + '</div>';
+    groups[sec].forEach(function(item){
+      html += '<div style="margin-bottom:10px">';
+      html += '<div style="font-size:0.9rem;font-weight:600;color:#0a1628">' + escH(item.item) + '</div>';
+      if (item.description) html += '<div style="font-size:0.72rem;color:#8a9bb0;margin-top:2px;font-style:italic">' + escH(item.description) + '</div>';
+      html += '</div>';
+    });
+    html += '</div>';
+  });
+
+  document.getElementById('menu-sections').innerHTML = html;
+  document.getElementById('menu-overlay').style.display = 'block';
+}
+
+function closeMenu() {
+  document.getElementById('menu-overlay').style.display = 'none';
+}
+
+function printMenu() {
+  window.print();
+}
+
+function shareMenuImage() {
+  // Use html2canvas if available, otherwise fallback to share sheet
+  var menuContent = document.getElementById('menu-content');
+  if (window.html2canvas) {
+    html2canvas(menuContent, {backgroundColor:'#ffffff', scale:2}).then(function(canvas){
+      canvas.toBlob(function(blob){
+        var file = new File([blob], 'menu.png', {type:'image/png'});
+        if (navigator.share && navigator.canShare({files:[file]})) {
+          navigator.share({files:[file], title:'Event Menu'});
+        } else {
+          var url = URL.createObjectURL(blob);
+          var a = document.createElement('a');
+          a.href = url; a.download = 'menu.png'; a.click();
+        }
+      });
+    });
+  } else {
+    // Fallback -- share URL
+    if (navigator.share) {
+      navigator.share({title: 'Event Menu', text: 'Check out the menu!'});
+    } else {
+      alert('Use your screenshot button to capture the menu, then share.');
+    }
+  }
+}
+
 
 function getCountdown(ev) {
   if (!ev.date || !ev.time) return '';
@@ -1205,7 +1331,10 @@ function openEvOverlay() {
         '<div style="font-size:0.48rem;color:var(--muted);letter-spacing:0.1em;text-transform:uppercase;margin-bottom:2px">Until Event</div>' +
         '<div style="font-size:0.72rem;color:var(--sky);font-weight:600;white-space:nowrap">'+getCountdown(ev)+'</div>' +
         '</div>' +
-        '<div style="margin-top:6px">'+status+'</div>' +
+        '<div style="display:flex;align-items:center;justify-content:space-between;margin-top:6px">' +
+        '<div style="flex:1">'+status+'</div>' +
+        (ev.menu && ev.menu.length ? '<button onclick="event.stopPropagation();openMenu('+i+')" style="background:none;border:1px solid #c9a84c;color:#c9a84c;font-family:\'IBM Plex Mono\',monospace;font-size:0.58rem;padding:4px 10px;border-radius:2px;cursor:pointer;white-space:nowrap;flex-shrink:0;margin-left:8px">Menu</button>' : '') +
+        '</div>' +
 
         '</div>';
     }
