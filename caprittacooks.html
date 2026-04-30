@@ -1180,7 +1180,7 @@ function openEvOverlay() {
 
     if (archived) {
       archived_html +=
-        '<div style="background:rgba(10,22,40,0.6);border:1px solid var(--mid);border-left:3px solid #52be80;border-radius:2px;padding:10px 14px;cursor:pointer;margin-bottom:4px;opacity:0.7" onclick="selectEvent('+i+')">' +
+        '<div style="background:rgba(10,22,40,0.6);border:1px solid var(--mid);border-left:3px solid #52be80;border-radius:2px;padding:10px 14px;cursor:pointer;margin-bottom:4px;opacity:0.7" onclick="selectEvent('+i+')" ontouchstart="evLpStart(event,'+i+')" ontouchmove="evLpCancel()" ontouchend="evLpCancel()">' +
         '<div style="display:flex;align-items:center;justify-content:space-between">' +
         '<div><div style="font-size:0.85rem;color:var(--cream)">'+escH(ev.name)+'</div>' +
         '<div style="font-size:0.6rem;color:var(--muted);margin-top:2px">'+dt+' &middot; '+done+' of '+total+' tasks</div></div>' +
@@ -1206,7 +1206,7 @@ function openEvOverlay() {
         '<div style="font-size:0.72rem;color:var(--sky);font-weight:600;white-space:nowrap">'+getCountdown(ev)+'</div>' +
         '</div>' +
         '<div style="margin-top:6px">'+status+'</div>' +
-        '<button onclick="event.stopPropagation();deleteEvent('+i+')" style="margin-top:8px;background:none;border:1px solid #5a2a2a;color:#f87171;font-size:0.58rem;padding:3px 10px;border-radius:2px;cursor:pointer;letter-spacing:0.06em">&#128465; Delete Event</button>' +
+
         '</div>';
     }
   });
@@ -1242,6 +1242,19 @@ function toggleArchived() {
   var count = events.filter(function(e){ return e.archived; }).length;
   btn.textContent = (open ? '▼' : '▲') + ' ' + (open ? 'Show' : 'Hide') + ' Archived (' + count + ')';
 }
+
+var evLpTimer = null;
+function evLpStart(e, i) {
+  evLpTimer = setTimeout(function(){
+    evLpTimer = null;
+    if (navigator.vibrate) navigator.vibrate([10,50,10]);
+    if (confirm('Delete "' + events[i].name + '"? This cannot be undone.')) {
+      deleteEvent(i);
+    }
+  }, 800);
+}
+function evLpCancel() { if (evLpTimer) { clearTimeout(evLpTimer); evLpTimer = null; } }
+
 
 function deleteEvent(i) {
   var ev = events[i];
