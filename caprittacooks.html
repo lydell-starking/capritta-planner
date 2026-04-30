@@ -1206,6 +1206,7 @@ function openEvOverlay() {
         '<div style="font-size:0.72rem;color:var(--sky);font-weight:600;white-space:nowrap">'+getCountdown(ev)+'</div>' +
         '</div>' +
         '<div style="margin-top:6px">'+status+'</div>' +
+        '<button onclick="event.stopPropagation();deleteEvent('+i+')" style="margin-top:8px;background:none;border:1px solid #5a2a2a;color:#f87171;font-size:0.58rem;padding:3px 10px;border-radius:2px;cursor:pointer;letter-spacing:0.06em">&#128465; Delete Event</button>' +
         '</div>';
     }
   });
@@ -1241,6 +1242,26 @@ function toggleArchived() {
   var count = events.filter(function(e){ return e.archived; }).length;
   btn.textContent = (open ? '▼' : '▲') + ' ' + (open ? 'Show' : 'Hide') + ' Archived (' + count + ')';
 }
+
+function deleteEvent(i) {
+  var ev = events[i];
+  if (!confirm('Delete "' + ev.name + '"? This cannot be undone.')) return;
+  // If deleting active event, switch to another
+  if (i === activeEventIdx) {
+    var next = events.findIndex(function(e, idx){ return idx !== i; });
+    activeEventIdx = next >= 0 ? next : 0;
+    if (next > i) activeEventIdx--;
+    localStorage.setItem('cp_active_event', activeEventIdx);
+  } else if (i < activeEventIdx) {
+    activeEventIdx--;
+    localStorage.setItem('cp_active_event', activeEventIdx);
+  }
+  events.splice(i, 1);
+  saveEvents();
+  if (events.length === 0) { renderChecklist(); renderShopping(); closeEvOverlay(); return; }
+  renderChecklist(); renderShopping(); openEvOverlay();
+}
+
 
 function archiveEvent(i) {
   if (!confirm('Archive "' + events[i].name + '"? It will move to the archived section. Recipes stay in the library.')) return;
