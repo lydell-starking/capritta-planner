@@ -360,7 +360,7 @@ body{background:var(--navy);color:var(--cream);font-family:'IBM Plex Mono',monos
     </div>
   </div>
   <!-- Menu content -->
-  <div id="menu-content">
+  <div id="menu-content" style="background:#fff;padding:28px 24px;border:1px solid #e8e2d8;border-radius:2px">
     <!-- Event header -->
     <div id="menu-event-header" style="text-align:center;margin-bottom:20px"></div>
     <!-- Decorative divider -->
@@ -799,10 +799,12 @@ function shareMenuImage() {
     backgroundColor:'#ffffff',
     scale:2,
     useCORS:true,
-    width: menuContent.scrollWidth,
-    height: menuContent.scrollHeight,
-    windowWidth: menuContent.scrollWidth,
-    windowHeight: menuContent.scrollHeight
+    x: 0,
+    y: 0,
+    scrollX: 0,
+    scrollY: 0,
+    width: menuContent.offsetWidth,
+    height: menuContent.offsetHeight
   }).then(function(canvas){
     menuContent.removeChild(logoDiv);
     if (btnRow) btnRow.style.visibility = '';
