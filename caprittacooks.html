@@ -789,9 +789,23 @@ function printMenu() {
 function shareMenuImage() {
   var menuContent = document.getElementById('menu-content');
   var btnRow = document.querySelector('#menu-overlay > div:first-child');
-  if (btnRow) btnRow.style.display = 'none';
-  html2canvas(menuContent, {backgroundColor:'#ffffff', scale:2, useCORS:true}).then(function(canvas){
-    if (btnRow) btnRow.style.display = '';
+  // Temporarily add logo inside content for capture
+  var logoDiv = document.createElement('div');
+  logoDiv.style.cssText = 'font-family:\'Bebas Neue\',sans-serif;font-size:0.9rem;letter-spacing:0.1em;color:#0a1628;margin-bottom:16px';
+  logoDiv.innerHTML = '<span style="color:#c9a84c">C</span>AP<span style="color:#c9a84c">C</span>OOKS';
+  menuContent.insertBefore(logoDiv, menuContent.firstChild);
+  if (btnRow) btnRow.style.visibility = 'hidden';
+  html2canvas(menuContent, {
+    backgroundColor:'#ffffff',
+    scale:2,
+    useCORS:true,
+    width: menuContent.scrollWidth,
+    height: menuContent.scrollHeight,
+    windowWidth: menuContent.scrollWidth,
+    windowHeight: menuContent.scrollHeight
+  }).then(function(canvas){
+    menuContent.removeChild(logoDiv);
+    if (btnRow) btnRow.style.visibility = '';
     canvas.toBlob(function(blob){
       var file = new File([blob], 'menu.png', {type:'image/png'});
       if (navigator.share && navigator.canShare && navigator.canShare({files:[file]})) {
@@ -804,7 +818,8 @@ function shareMenuImage() {
       }
     }, 'image/png');
   }).catch(function(){
-    if (btnRow) btnRow.style.display = '';
+    menuContent.removeChild(logoDiv);
+    if (btnRow) btnRow.style.visibility = '';
     alert('Use your screenshot button to capture the menu.');
   });
 }
