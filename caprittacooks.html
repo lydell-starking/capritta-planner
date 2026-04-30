@@ -550,7 +550,7 @@ function renderTaskRow(t, state, ts, isOverdue, isToday) {
   if (t.note && !done) inner += '<div class="item-note">' + escH(t.note) + '</div>';
   if (!done && t.recipe) {
     var r = recipes.find(function(x){ return x.id === t.recipe; });
-    if (r && !r.hidden) inner += '<div><button class="item-recipe-btn" onclick="event.stopPropagation();openRecipeDetail(\'' + r.id + '\')">Recipe: ' + escH(r.name) + '</button></div>';
+    if (r && !r.hidden) inner += '<div><button class="item-recipe-btn" onclick="event.stopPropagation();openRecipeDetail(\'' + r.id + '\',' + (t.servings||0) + ')">Recipe: ' + escH(r.name) + '</button></div>';
   }
   return '<div class="swipe-wrap" id="sw-' + t._i + '"' +
     ' ontouchstart="swipeStart(event,' + t._i + ');lpStart(event,' + t._i + ')"' +
@@ -973,26 +973,31 @@ function renderRecipes() {
   document.getElementById('recipes-body').innerHTML = html;
 }
 
-function openRecipeDetail(id) {
+function openRecipeDetail(id, targetServings) {
   var r = recipes.find(function(x){ return x.id === id; });
   if (!r) return;
   currentRecipeId = id;
   document.getElementById('rd-title').textContent = r.name;
   var baseS = r.baseServings || 1;
-  var scale = 1;
+  var initServings = targetServings ? parseInt(targetServings) : baseS;
+  var scale = initServings / baseS;
   var html = '';
   if (r.finishedPhoto) html += '<img src="' + r.finishedPhoto + '" alt="" style="width:100%;border-radius:2px;margin-bottom:16px;max-height:200px;object-fit:cover">';
   else html += '<div class="rd-photo-add" onclick="document.getElementById(\'photo-upload-' + id + '\').click()">&#128247; Add Photo<input type="file" accept="image/*" id="photo-upload-' + id + '" style="display:none" onchange="uploadRecipePhoto(\'' + id + '\',this)"></div>';
+  if (targetServings && targetServings !== baseS) {
+    html += '<div style="background:#0a2a1a;border:1px solid #52be80;border-radius:2px;padding:6px 10px;font-size:0.65rem;color:#52be80;margin-bottom:10px">&#9432; Scaled for event: ' + initServings + ' servings</div>';
+  }
   html += '<div class="rd-scale-row"><label>Servings</label>' +
     '<button onclick="scaleRecipe(\'' + id + '\',-1)" style="background:var(--navy);border:1px solid var(--mid);color:var(--cream);width:28px;height:28px;border-radius:2px;cursor:pointer;font-size:1rem">-</button>' +
-    '<input class="rd-scale-input" id="scale-input-' + id + '" type="number" min="1" value="' + baseS + '" onchange="scaleRecipe(\'' + id + '\',0)">' +
+    '<input class="rd-scale-input" id="scale-input-' + id + '" type="number" min="1" value="' + initServings + '" onchange="scaleRecipe(\'' + id + '\',0)">' +
     '<button onclick="scaleRecipe(\'' + id + '\',1)" style="background:var(--navy);border:1px solid var(--mid);color:var(--cream);width:28px;height:28px;border-radius:2px;cursor:pointer;font-size:1rem">+</button>' +
     '<span style="font-size:0.65rem;color:var(--muted)">' + (r.yieldText || 'base: ' + baseS + ' servings') + '</span></div>';
   if (r.ingredients && r.ingredients.length) {
     html += '<div class="rd-section">Ingredients</div><table class="ing-table" id="ing-table-' + id + '">';
     r.ingredients.forEach(function(ing){
       var amt = parseFloat(ing.amount) || 0;
-      html += '<tr><td>' + escH(ing.item) + '</td><td>' + (amt ? amt.toFixed(amt%1?2:0) : '') + ' ' + escH(ing.unit||'') + '</td><td>' + escH(ing.note||'') + '</td></tr>';
+      var scaled = amt * scale;
+      html += '<tr><td>' + escH(ing.item) + '</td><td>' + (amt ? scaled.toFixed(scaled%1?2:0) : '') + ' ' + escH(ing.unit||'') + '</td><td>' + escH(ing.note||'') + '</td></tr>';
     });
     html += '</table>';
   }
