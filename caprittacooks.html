@@ -1583,6 +1583,26 @@ function importEvent() {
   if (!raw) { status.textContent = 'Paste JSON first.'; return; }
   var data;
   try { data = JSON.parse(raw); } catch(e) { status.textContent = 'Invalid JSON: '+e.message; return; }
+
+  // Handle standalone recipes array
+  if (Array.isArray(data)) {
+    var added = 0;
+    data.forEach(function(r){
+      if (r.id && r.name) {
+        var existing = recipes.findIndex(function(x){ return x.id === r.id; });
+        if (existing >= 0) recipes[existing] = r;
+        else { recipes.push(r); added++; }
+      }
+    });
+    saveRecipes();
+    document.getElementById('import-json').value = '';
+    status.textContent = '';
+    document.getElementById('import-overlay').classList.remove('open');
+    renderRecipes();
+    alert('Added ' + added + ' recipes to library.');
+    return;
+  }
+
   if (!data.name) { status.textContent = 'Missing: name'; return; }
   if (!data.date) { status.textContent = 'Missing: date'; return; }
   if (events.find(function(e){ return e.name === data.name; })) {
