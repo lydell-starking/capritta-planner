@@ -41,7 +41,7 @@ body{background:var(--navy);color:var(--cream);font-family:'IBM Plex Mono',monos
 .progress-fill{height:100%;background:var(--gold);border-radius:2px;transition:width 0.4s ease}
 .progress-label{font-size:0.58rem;color:var(--muted);letter-spacing:0.1em}
 .bottom-nav{display:grid;grid-template-columns:repeat(4,1fr);background:var(--navy);
-  border-top:2px solid var(--blue);flex-shrink:0;padding-bottom:env(safe-area-inset-bottom,0px)}
+  border-top:2px solid var(--blue);flex-shrink:0;padding-bottom:min(env(safe-area-inset-bottom,0px),8px)}
 .nav-btn{display:flex;flex-direction:column;align-items:center;gap:2px;
   padding:6px 4px 5px;background:none;border:none;color:var(--muted);
   font-family:'IBM Plex Mono',monospace;font-size:0.5rem;letter-spacing:0.1em;
@@ -371,6 +371,16 @@ body{background:var(--navy);color:var(--cream);font-family:'IBM Plex Mono',monos
   <div style="display:flex;justify-content:flex-end;align-items:center;gap:8px;padding:max(16px,env(safe-area-inset-top)) 16px 12px">
     <button onclick="shareInviteImage()" style="background:#0a1628;color:#f4f0e6;border:1px solid #f4f0e6;font-family:'IBM Plex Mono',monospace;font-size:0.65rem;letter-spacing:0.08em;padding:10px 16px;border-radius:2px;cursor:pointer">&#8679; Share</button>
     <button onclick="closeInvite()" style="background:none;border:1px solid #1e4d8c;color:#8a9bb0;font-family:'IBM Plex Mono',monospace;font-size:0.65rem;padding:10px 16px;border-radius:2px;cursor:pointer">Close</button>
+  </div>
+  <!-- Setup form (shown when address/highlight missing) -->
+  <div id="invite-setup" style="display:none;padding:0 16px 32px">
+    <div style="font-family:'Bebas Neue',sans-serif;font-size:1.1rem;color:var(--gold);letter-spacing:0.1em;margin-bottom:16px">Set Up Invite</div>
+    <input type="hidden" id="invite-setup-idx" value="0">
+    <label style="font-size:0.58rem;color:var(--muted);letter-spacing:0.12em;text-transform:uppercase;display:block;margin-bottom:5px">Address</label>
+    <input id="invite-setup-addr" type="text" placeholder="123 Main St, West Melbourne FL" style="width:100%;background:var(--blue);border:1px solid var(--mid);color:var(--cream);font-family:'IBM Plex Mono',monospace;font-size:0.85rem;padding:10px 12px;border-radius:2px;margin-bottom:14px">
+    <label style="font-size:0.58rem;color:var(--muted);letter-spacing:0.12em;text-transform:uppercase;display:block;margin-bottom:5px">Food Highlights</label>
+    <input id="invite-setup-hl" type="text" placeholder="Pulled Pork · Wings · Mac & Cheese" style="width:100%;background:var(--blue);border:1px solid var(--mid);color:var(--cream);font-family:'IBM Plex Mono',monospace;font-size:0.85rem;padding:10px 12px;border-radius:2px;margin-bottom:20px">
+    <button onclick="saveInviteSetup()" style="width:100%;background:var(--gold);color:var(--navy);border:none;font-family:'Bebas Neue',sans-serif;font-size:1rem;letter-spacing:0.08em;padding:12px;border-radius:2px;cursor:pointer">Save &amp; View Invite</button>
   </div>
   <div id="invite-card" style="background:linear-gradient(160deg,#111d2e 0%,#0a1220 50%,#0f1a28 100%);margin:0 16px 32px;border:1px solid rgba(201,168,76,0.35);border-radius:4px;padding:40px 28px 36px;position:relative;min-height:400px;display:flex;flex-direction:column;justify-content:space-between">
     <!-- Corner accents -->
@@ -770,7 +780,19 @@ async function fetchEventWeather() {
 // ── Invite ────────────────────────────────────────────────────
 function openInvite(i) {
   var ev = events[i];
-  if (!ev || !ev.inviteHighlight || !ev.address) return;
+  if (!ev) return;
+  // If missing fields, show setup form inside the overlay
+  if (!ev.address || !ev.inviteHighlight) {
+    document.getElementById('invite-card').style.display = 'none';
+    document.getElementById('invite-setup').style.display = 'block';
+    document.getElementById('invite-setup-addr').value = ev.address || '';
+    document.getElementById('invite-setup-hl').value = ev.inviteHighlight || '';
+    document.getElementById('invite-setup-idx').value = i;
+    document.getElementById('invite-overlay').style.display = 'block';
+    return;
+  }
+  document.getElementById('invite-setup').style.display = 'none';
+  document.getElementById('invite-card').style.display = 'flex';
   // Event name
   document.getElementById('invite-event-name').textContent = ev.name;
   // Date + time
@@ -793,6 +815,14 @@ function openInvite(i) {
   document.getElementById('invite-address').textContent = ev.address;
   document.getElementById('invite-highlight').textContent = ev.inviteHighlight;
   document.getElementById('invite-overlay').style.display = 'block';
+}
+function saveInviteSetup() {
+  var i = parseInt(document.getElementById('invite-setup-idx').value);
+  var ev = events[i]; if (!ev) return;
+  ev.address = document.getElementById('invite-setup-addr').value.trim();
+  ev.inviteHighlight = document.getElementById('invite-setup-hl').value.trim();
+  saveEvents();
+  openInvite(i);
 }
 function closeInvite() {
   document.getElementById('invite-overlay').style.display = 'none';
@@ -1215,16 +1245,22 @@ function recipeFilter(cat, btn) {
 
 function renderRecipes() {
   var visible = recipes.filter(function(r){ return !r.hidden; });
-  // Build stats
+  // Build category counts
   var cats = {};
   visible.forEach(function(r){ var c = r.category||'Other'; cats[c]=(cats[c]||0)+1; });
-  var catOrder = ['Main','Side','Dessert','Drink','Sauce','Component','Bread','Snack','Soup'];
-  var statParts = catOrder.filter(function(c){ return cats[c]; }).map(function(c){
-    return '<span style="color:var(--cream)">'+c+'</span> '+cats[c];
+
+  // Update filter button labels with counts
+  var btns = document.querySelectorAll('#recipe-filter-btns .shop-filter-btn');
+  btns.forEach(function(btn){
+    var cat = btn.getAttribute('data-cat') || btn.textContent.replace(/\s*\(\d+\)/,'').trim();
+    btn.setAttribute('data-cat', cat);
+    var count = cat === 'all' ? visible.length : (cats[cat.charAt(0).toUpperCase()+cat.slice(1).toLowerCase()]||cats[cat]||0);
+    btn.textContent = cat.toUpperCase() + (count ? ' ('+count+')' : '');
   });
-  Object.keys(cats).forEach(function(c){ if(catOrder.indexOf(c)<0) statParts.push('<span style="color:var(--cream)">'+c+'</span> '+cats[c]); });
+
+  // Hide stats bar (counts are now on buttons)
   var statsEl = document.getElementById('recipe-stats');
-  if(statsEl) statsEl.innerHTML = '<span style="color:var(--gold);font-weight:600">'+visible.length+' recipes</span> &nbsp;&middot;&nbsp; '+statParts.join(' &nbsp;&middot;&nbsp; ');
+  if(statsEl) statsEl.style.display = 'none';
 
   var filtered = visible.filter(function(r){
     if (recipeFilter_cur === 'all') return true;
@@ -1477,7 +1513,7 @@ function openEvOverlay() {
         '</div>' +
         '<div style="display:flex;align-items:center;justify-content:space-between;margin-top:6px">' +
         '<div style="flex:1">'+status+'</div>' +
-        (ev.inviteHighlight && ev.address ? '<button onclick="event.stopPropagation();openInvite('+i+')" style="background:none;border:1px solid var(--sky);color:var(--sky);font-family:\'IBM Plex Mono\',monospace;font-size:0.58rem;padding:4px 10px;border-radius:2px;cursor:pointer;white-space:nowrap;flex-shrink:0;margin-left:8px">Invite</button>' : '') +
+        '<button onclick="event.stopPropagation();openInvite('+i+')" style="background:none;border:1px solid var(--sky);color:var(--sky);font-family:\'IBM Plex Mono\',monospace;font-size:0.58rem;padding:4px 10px;border-radius:2px;cursor:pointer;white-space:nowrap;flex-shrink:0;margin-left:8px">Invite</button>' +
         (ev.menu && ev.menu.length ? '<button onclick="event.stopPropagation();openMenu('+i+')" style="background:none;border:1px solid #c9a84c;color:#c9a84c;font-family:\'IBM Plex Mono\',monospace;font-size:0.58rem;padding:4px 10px;border-radius:2px;cursor:pointer;white-space:nowrap;flex-shrink:0;margin-left:8px">Menu</button>' : '') +
         '</div>' +
 
