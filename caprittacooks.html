@@ -298,6 +298,7 @@ body{background:var(--navy);color:var(--cream);font-family:'IBM Plex Mono',monos
     <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px">
       <div style="font-family:'Bebas Neue',sans-serif;font-size:1rem;letter-spacing:0.1em;color:var(--gold)">RECIPE LIBRARY</div>
       <div style="display:flex;gap:6px">
+        <button class="btn-ghost" onclick="exportRecipes()" style="color:var(--gold);border-color:var(--gold)">&#8659; Export</button>
         <button class="btn-ghost" onclick="shareShoppingList()" style="color:var(--sky);border-color:var(--sky)">&#8679; List</button>
         <button class="btn-ghost" onclick="toggleAddRecipe()" id="add-recipe-toggle">+ Add</button>
       </div>
@@ -1218,6 +1219,20 @@ function saveTaskEdit() {
 }
 
 
+function exportRecipes() {
+  var visible = recipes.filter(function(r){ return !r.hidden; });
+  if (!visible.length) { alert('No recipes to export.'); return; }
+  var payload = JSON.stringify(visible, null, 2);
+  var blob = new Blob([payload], {type: 'application/json'});
+  var url = URL.createObjectURL(blob);
+  var a = document.createElement('a');
+  var date = new Date().toISOString().slice(0,10);
+  a.href = url;
+  a.download = 'capcooks-recipes-' + date + '.json';
+  a.click();
+  setTimeout(function(){ URL.revokeObjectURL(url); }, 1000);
+}
+
 var recipeFilter_cur = 'all';
 
 function recipeFilter(cat, btn) {
@@ -1463,7 +1478,7 @@ function openEvOverlay() {
     var active   = i === activeEventIdx;
     var archived = ev.archived === true;
     var total    = (ev.timeline||[]).length;
-    var state    = active ? getActiveState() : (function(){ try { return JSON.parse(localStorage.getItem('ev_state_' + ev.id) || '{}'); } catch(e){ return {}; } })();
+    var state    = active ? getActiveState() : getEvState(ev.id);
     var done     = Object.keys(state).filter(function(k){ return state[k]===true&&parseInt(k)<total; }).length;
     var pct      = total ? Math.round(done/total*100) : 0;
     var complete = total > 0 && done >= total;
