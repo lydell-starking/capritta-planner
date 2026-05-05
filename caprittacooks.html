@@ -41,7 +41,7 @@ body{background:var(--navy);color:var(--cream);font-family:'IBM Plex Mono',monos
 .progress-fill{height:100%;background:var(--gold);border-radius:2px;transition:width 0.4s ease}
 .progress-label{font-size:0.58rem;color:var(--muted);letter-spacing:0.1em}
 .bottom-nav{display:grid;grid-template-columns:repeat(4,1fr);background:var(--navy);
-  border-top:2px solid var(--blue);flex-shrink:0;padding-bottom:min(env(safe-area-inset-bottom,0px),8px)}
+  border-top:2px solid var(--blue);flex-shrink:0}
 .nav-btn{display:flex;flex-direction:column;align-items:center;gap:2px;
   padding:6px 4px 5px;background:none;border:none;color:var(--muted);
   font-family:'IBM Plex Mono',monospace;font-size:0.5rem;letter-spacing:0.1em;
@@ -311,13 +311,13 @@ body{background:var(--navy);color:var(--cream);font-family:'IBM Plex Mono',monos
       </div>
     </div>
     <div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:12px" id="recipe-filter-btns">
-      <button class="shop-filter-btn active" onclick="recipeFilter('all',this)">All</button>
-      <button class="shop-filter-btn" onclick="recipeFilter('Main',this)">Main</button>
-      <button class="shop-filter-btn" onclick="recipeFilter('Side',this)">Side</button>
-      <button class="shop-filter-btn" onclick="recipeFilter('Dessert',this)">Dessert</button>
-      <button class="shop-filter-btn" onclick="recipeFilter('Drink',this)">Drink</button>
-      <button class="shop-filter-btn" onclick="recipeFilter('Component',this)">Component</button>
-      <button class="shop-filter-btn" onclick="recipeFilter('Bread',this)">Bread</button>
+      <button class="shop-filter-btn active" data-cat="all" onclick="recipeFilter('all',this)">All</button>
+      <button class="shop-filter-btn" data-cat="Main" onclick="recipeFilter('Main',this)">Main</button>
+      <button class="shop-filter-btn" data-cat="Side" onclick="recipeFilter('Side',this)">Side</button>
+      <button class="shop-filter-btn" data-cat="Dessert" onclick="recipeFilter('Dessert',this)">Dessert</button>
+      <button class="shop-filter-btn" data-cat="Drink" onclick="recipeFilter('Drink',this)">Drink</button>
+      <button class="shop-filter-btn" data-cat="Component" onclick="recipeFilter('Component',this)">Component</button>
+      <button class="shop-filter-btn" data-cat="Bread" onclick="recipeFilter('Bread',this)">Bread</button>
     </div>
     <div class="recipe-grid" id="recipes-body"></div>
   </div>
@@ -1252,10 +1252,11 @@ function renderRecipes() {
   // Update filter button labels with counts
   var btns = document.querySelectorAll('#recipe-filter-btns .shop-filter-btn');
   btns.forEach(function(btn){
-    var cat = btn.getAttribute('data-cat') || btn.textContent.replace(/\s*\(\d+\)/,'').trim();
-    btn.setAttribute('data-cat', cat);
-    var count = cat === 'all' ? visible.length : (cats[cat.charAt(0).toUpperCase()+cat.slice(1).toLowerCase()]||cats[cat]||0);
-    btn.textContent = cat.toUpperCase() + (count ? ' ('+count+')' : '');
+    var cat = btn.getAttribute('data-cat');
+    if (!cat) return;
+    var count = cat === 'all' ? visible.length : (cats[cat] || 0);
+    var label = cat === 'all' ? 'All' : cat;
+    btn.textContent = label + ' (' + count + ')';
   });
 
   // Hide stats bar (counts are now on buttons)
