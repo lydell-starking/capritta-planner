@@ -1840,7 +1840,9 @@ function buildSystemPrompt() {
   var done  = total ? Object.keys(state).filter(function(k){return state[k]===true;}).length : 0;
   var pending = (ev.timeline||[]).filter(function(_,i){return !state[i];}).map(function(t){return t.day+': '+t.title;}).slice(0,20);
   var recipeList = recipes.filter(function(r){return !r.hidden;}).map(function(r){return r.name+' ('+r.baseServings+' servings)';});
+  var todayFull = new Date().toLocaleDateString('en-US',{weekday:'long',month:'long',day:'numeric',year:'numeric'});
   return 'You are Chef, an AI assistant for Capritta catering events.\n\n' +
+    'TODAY: ' + todayFull + '\n' +
     'CURRENT EVENT: ' + ev.name + '\n' +
     'Date: ' + (ev.date||'TBD') + ' | Guests: ' + (ev.guests||'?') + ' | Venue: ' + (ev.venue||'?') + '\n' +
     'Progress: ' + done + ' of ' + total + ' tasks complete\n\n' +
