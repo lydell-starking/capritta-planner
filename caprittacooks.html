@@ -42,19 +42,15 @@ body{background:var(--navy);color:var(--cream);font-family:'IBM Plex Mono',monos
 .progress-label{font-size:0.58rem;color:var(--muted);letter-spacing:0.1em}
 .bottom-nav{display:grid;grid-template-columns:repeat(4,1fr);background:var(--navy);
   border-top:2px solid var(--blue);flex-shrink:0;padding-bottom:env(safe-area-inset-bottom,0px)}
-.nav-btn{display:flex;flex-direction:column;align-items:center;gap:2px;
-  padding:6px 4px 5px;background:none;border:none;color:var(--muted);
-  font-family:'IBM Plex Mono',monospace;font-size:0.5rem;letter-spacing:0.1em;
+.nav-btn{display:flex;flex-direction:column;align-items:center;gap:3px;
+  padding:10px 4px 8px;background:none;border:none;color:var(--muted);
+  font-family:'IBM Plex Mono',monospace;font-size:0.52rem;letter-spacing:0.1em;
   text-transform:uppercase;cursor:pointer;transition:color 0.15s}
-.nav-btn .nav-icon{font-size:1.05rem;line-height:1}
+.nav-btn .nav-icon{font-size:1.2rem;line-height:1}
 .nav-btn.active{color:var(--gold)}
 .main{flex:1;overflow-y:auto;overflow-x:hidden;-webkit-overflow-scrolling:touch}
-.tab{display:none;padding:12px 12px 16px}
+.tab{display:none;padding:16px 16px 40px}
 .tab.active{display:block}
-/* Chef tab fills full main height, no scroll */
-.main:has(#tab-chef.active){overflow:hidden}
-#tab-chef.active{display:flex;flex-direction:column;height:100%;padding:0}
-.chat-wrap{flex:1;min-height:0;display:flex;flex-direction:column;overflow:hidden}
 .section-head{display:flex;align-items:center;gap:10px;margin:20px 0 8px}
 .section-head:first-child{margin-top:0}
 .section-head h2{font-family:'Bebas Neue',sans-serif;font-size:1.05rem;color:var(--gold);letter-spacing:0.1em;flex:1}
@@ -195,7 +191,8 @@ body{background:var(--navy);color:var(--cream);font-family:'IBM Plex Mono',monos
 .add-recipe-panel textarea:focus{outline:none;border-color:var(--gold)}
 .parse-actions{display:flex;gap:8px;align-items:center}
 .parse-status{font-size:0.65rem;color:var(--muted);flex:1}
-.chat-messages{flex:1;min-height:0;overflow-y:auto;padding:14px 16px;display:flex;flex-direction:column;gap:12px}
+.chat-wrap{display:flex;flex-direction:column;overflow:hidden}
+.chat-messages{flex:1;overflow-y:auto;padding:14px 16px;display:flex;flex-direction:column;gap:12px}
 .msg{max-width:92%;padding:10px 14px;border-radius:2px;font-size:0.82rem;line-height:1.65}
 .msg.chef{background:var(--blue);color:var(--cream);align-self:flex-start;border-left:3px solid var(--gold)}
 .msg.chef strong{color:#e0c068}
@@ -216,6 +213,7 @@ body{background:var(--navy);color:var(--cream);font-family:'IBM Plex Mono',monos
   font-family:'IBM Plex Mono',monospace;font-size:0.58rem;padding:4px 10px;
   border-radius:2px;cursor:pointer;white-space:nowrap}
 .chat-input-row{display:flex;gap:8px;padding:10px 16px;
+  padding-bottom:max(10px,env(safe-area-inset-bottom));
   border-top:1px solid var(--blue);flex-shrink:0;background:var(--navy)}
 .chat-input{flex:1;background:var(--blue);border:1px solid var(--mid);color:var(--cream);
   font-family:'IBM Plex Mono',monospace;font-size:0.85rem;padding:10px 12px;border-radius:2px}
@@ -298,12 +296,10 @@ body{background:var(--navy);color:var(--cream);font-family:'IBM Plex Mono',monos
     <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px">
       <div style="font-family:'Bebas Neue',sans-serif;font-size:1rem;letter-spacing:0.1em;color:var(--gold)">RECIPE LIBRARY</div>
       <div style="display:flex;gap:6px">
-        <button class="btn-ghost" onclick="exportRecipes()" style="color:var(--gold);border-color:var(--gold)">&#8659; Export</button>
         <button class="btn-ghost" onclick="shareShoppingList()" style="color:var(--sky);border-color:var(--sky)">&#8679; List</button>
         <button class="btn-ghost" onclick="toggleAddRecipe()" id="add-recipe-toggle">+ Add</button>
       </div>
     </div>
-    <div id="recipe-stats" style="font-size:0.62rem;color:var(--muted);letter-spacing:0.07em;margin-bottom:10px;line-height:1.8"></div>
     <div class="add-recipe-panel" id="add-recipe-panel">
       <label style="font-size:0.6rem;color:var(--muted);letter-spacing:0.1em;text-transform:uppercase;display:block;margin-bottom:5px">Paste recipe -- AI will parse it (requires API key)</label>
       <textarea id="recipe-paste-input" placeholder="e.g. Kansas City Sauce: 2 cups ketchup..."></textarea>
@@ -314,16 +310,13 @@ body{background:var(--navy);color:var(--cream);font-family:'IBM Plex Mono',monos
       </div>
     </div>
     <div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:12px" id="recipe-filter-btns">
-      <button class="shop-filter-btn active" data-cat="all" onclick="recipeFilter('all',this)">All</button>
-      <button class="shop-filter-btn" data-cat="Main" onclick="recipeFilter('Main',this)">Main</button>
-      <button class="shop-filter-btn" data-cat="Side" onclick="recipeFilter('Side',this)">Side</button>
-      <button class="shop-filter-btn" data-cat="Dessert" onclick="recipeFilter('Dessert',this)">Dessert</button>
-      <button class="shop-filter-btn" data-cat="Sauce" onclick="recipeFilter('Sauce',this)">Sauce</button>
-      <button class="shop-filter-btn" data-cat="Drink" onclick="recipeFilter('Drink',this)">Drink</button>
-      <button class="shop-filter-btn" data-cat="Component" onclick="recipeFilter('Component',this)">Component</button>
-      <button class="shop-filter-btn" data-cat="Bread" onclick="recipeFilter('Bread',this)">Bread</button>
-      <button class="shop-filter-btn" data-cat="Soup" onclick="recipeFilter('Soup',this)">Soup</button>
-      <button class="shop-filter-btn" data-cat="Snack" onclick="recipeFilter('Snack',this)">Snack</button>
+      <button class="shop-filter-btn active" onclick="recipeFilter('all',this)">All</button>
+      <button class="shop-filter-btn" onclick="recipeFilter('Main',this)">Main</button>
+      <button class="shop-filter-btn" onclick="recipeFilter('Side',this)">Side</button>
+      <button class="shop-filter-btn" onclick="recipeFilter('Dessert',this)">Dessert</button>
+      <button class="shop-filter-btn" onclick="recipeFilter('Drink',this)">Drink</button>
+      <button class="shop-filter-btn" onclick="recipeFilter('Component',this)">Component</button>
+      <button class="shop-filter-btn" onclick="recipeFilter('Bread',this)">Bread</button>
     </div>
     <div class="recipe-grid" id="recipes-body"></div>
   </div>
@@ -367,58 +360,19 @@ body{background:var(--navy);color:var(--cream);font-family:'IBM Plex Mono',monos
   <h2>Events</h2>
   <div id="ev-list" style="display:flex;flex-direction:column;gap:8px;margin-bottom:20px"></div>
   <button class="btn-gold" style="width:100%;padding:12px;font-size:1rem;margin-bottom:8px" onclick="newEventViaChat()">+ Plan New Event with Chef</button>
-  <button onclick="document.getElementById('ev-overlay').classList.remove('open');document.getElementById('import-overlay').classList.add('open')" style="width:100%;padding:12px;font-size:1rem;margin-bottom:10px;background:none;border:1px solid var(--gold);color:var(--gold);font-family:'Bebas Neue',sans-serif;letter-spacing:0.08em;border-radius:2px;cursor:pointer">&#8659; Import from Chef JSON</button>
+  <button onclick="document.getElementById('ev-overlay').classList.remove('open');document.getElementById('import-overlay').classList.add('open')" style="width:100%;padding:12px;font-size:1rem;margin-bottom:8px;background:none;border:1px solid var(--gold);color:var(--gold);font-family:'Bebas Neue',sans-serif;letter-spacing:0.08em;border-radius:2px;cursor:pointer">&#8659; Import from Chef JSON</button>
+  <button onclick="exportEventJSON()" style="width:100%;padding:12px;font-size:1rem;margin-bottom:10px;background:none;border:1px solid var(--sky);color:var(--sky);font-family:'Bebas Neue',sans-serif;letter-spacing:0.08em;border-radius:2px;cursor:pointer">&#8679; Export Current Event JSON</button>
   <button class="btn-ghost" style="display:block;margin:0 auto" onclick="closeEvOverlay()">Close</button>
 </div>
 
 <!-- Import Overlay -->
-<!-- Invite Overlay -->
-<div id="invite-overlay" style="display:none;position:fixed;inset:0;background:#0a1628;z-index:500;overflow-y:auto;font-family:'IBM Plex Mono',monospace">
-  <div style="display:flex;justify-content:flex-end;align-items:center;gap:8px;padding:max(16px,env(safe-area-inset-top)) 16px 12px">
-    <button onclick="shareInviteImage()" style="background:#0a1628;color:#f4f0e6;border:1px solid #f4f0e6;font-family:'IBM Plex Mono',monospace;font-size:0.65rem;letter-spacing:0.08em;padding:10px 16px;border-radius:2px;cursor:pointer">&#8679; Share</button>
-    <button onclick="closeInvite()" style="background:none;border:1px solid #1e4d8c;color:#8a9bb0;font-family:'IBM Plex Mono',monospace;font-size:0.65rem;padding:10px 16px;border-radius:2px;cursor:pointer">Close</button>
-  </div>
-  <!-- Setup form (shown when address/highlight missing) -->
-  <div id="invite-setup" style="display:none;padding:0 16px 32px">
-    <div style="font-family:'Bebas Neue',sans-serif;font-size:1.1rem;color:var(--gold);letter-spacing:0.1em;margin-bottom:16px">Set Up Invite</div>
-    <input type="hidden" id="invite-setup-idx" value="0">
-    <label style="font-size:0.58rem;color:var(--muted);letter-spacing:0.12em;text-transform:uppercase;display:block;margin-bottom:5px">Address</label>
-    <input id="invite-setup-addr" type="text" placeholder="123 Main St, West Melbourne FL" style="width:100%;background:var(--blue);border:1px solid var(--mid);color:var(--cream);font-family:'IBM Plex Mono',monospace;font-size:0.85rem;padding:10px 12px;border-radius:2px;margin-bottom:14px">
-    <label style="font-size:0.58rem;color:var(--muted);letter-spacing:0.12em;text-transform:uppercase;display:block;margin-bottom:5px">Food Highlights</label>
-    <input id="invite-setup-hl" type="text" placeholder="Pulled Pork · Wings · Mac & Cheese" style="width:100%;background:var(--blue);border:1px solid var(--mid);color:var(--cream);font-family:'IBM Plex Mono',monospace;font-size:0.85rem;padding:10px 12px;border-radius:2px;margin-bottom:20px">
-    <button onclick="saveInviteSetup()" style="width:100%;background:var(--gold);color:var(--navy);border:none;font-family:'Bebas Neue',sans-serif;font-size:1rem;letter-spacing:0.08em;padding:12px;border-radius:2px;cursor:pointer">Save &amp; View Invite</button>
-  </div>
-  <div id="invite-card" style="background:linear-gradient(160deg,#111d2e 0%,#0a1220 50%,#0f1a28 100%);margin:0 16px 32px;border:1px solid rgba(201,168,76,0.35);border-radius:4px;padding:40px 28px 36px;position:relative;min-height:400px;display:flex;flex-direction:column;justify-content:space-between">
-    <!-- Corner accents -->
-    <div style="position:absolute;top:12px;left:12px;width:20px;height:20px;border-top:2px solid #c9a84c;border-left:2px solid #c9a84c;border-radius:2px 0 0 0"></div>
-    <div style="position:absolute;top:12px;right:12px;width:20px;height:20px;border-top:2px solid #c9a84c;border-right:2px solid #c9a84c;border-radius:0 2px 0 0"></div>
-    <div style="position:absolute;bottom:12px;left:12px;width:20px;height:20px;border-bottom:2px solid #c9a84c;border-left:2px solid #c9a84c;border-radius:0 0 0 2px"></div>
-    <div style="position:absolute;bottom:12px;right:12px;width:20px;height:20px;border-bottom:2px solid #c9a84c;border-right:2px solid #c9a84c;border-radius:0 0 2px 0"></div>
-    <!-- Content -->
-    <div style="text-align:center">
-      <div style="font-size:0.6rem;letter-spacing:0.3em;text-transform:uppercase;color:#c9a84c;margin-bottom:18px">You Are Invited</div>
-      <div id="invite-event-name" style="font-family:'Bebas Neue',sans-serif;font-size:2rem;letter-spacing:0.08em;color:#f4f0e6;line-height:1.1;margin-bottom:16px"></div>
-      <div style="display:flex;align-items:center;gap:10px;justify-content:center;margin-bottom:20px">
-        <div style="flex:1;height:1px;background:linear-gradient(90deg,transparent,rgba(201,168,76,0.5))"></div>
-        <span style="color:#c9a84c;font-size:0.65rem">&#9670;</span>
-        <div style="flex:1;height:1px;background:linear-gradient(90deg,rgba(201,168,76,0.5),transparent)"></div>
-      </div>
-      <div id="invite-datetime" style="font-size:0.85rem;color:#f4f0e6;letter-spacing:0.06em;margin-bottom:8px"></div>
-      <div id="invite-address" style="font-size:0.72rem;color:#8a9bb0;letter-spacing:0.05em;margin-bottom:24px"></div>
-    </div>
-    <div style="text-align:center">
-      <div style="font-size:0.55rem;letter-spacing:0.2em;text-transform:uppercase;color:#c9a84c;margin-bottom:8px">On The Menu</div>
-      <div id="invite-highlight" style="font-size:0.78rem;color:#f4f0e6;line-height:1.8"></div>
-    </div>
-  </div>
-</div>
-
 <div id="menu-overlay" style="display:none;position:fixed;inset:0;background:#fff;z-index:500;overflow-y:auto;padding:32px 28px 48px;font-family:'IBM Plex Mono',monospace">
   <!-- Header -->
   <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:24px;padding-top:max(16px,env(safe-area-inset-top))">
     <div style="font-family:'Bebas Neue',sans-serif;font-size:1rem;letter-spacing:0.1em;color:#0a1628"><span style="color:#c9a84c">C</span>AP<span style="color:#c9a84c">C</span>OOKS</div>
     <div style="display:flex;gap:8px">
       <button onclick="shareMenuImage()" style="background:#0a1628;color:#f4f0e6;border:none;font-family:'IBM Plex Mono',monospace;font-size:0.65rem;letter-spacing:0.08em;padding:10px 16px;border-radius:2px;cursor:pointer">&#8679; Image</button>
+      <button onclick="printMenu()" style="background:#c9a84c;color:#0a1628;border:none;font-family:'IBM Plex Mono',monospace;font-size:0.65rem;letter-spacing:0.08em;padding:10px 16px;border-radius:2px;cursor:pointer">&#128438; Print</button>
       <button onclick="closeMenu()" style="background:none;border:1px solid #d0c9bb;color:#8a9bb0;font-family:'IBM Plex Mono',monospace;font-size:0.65rem;padding:10px 16px;border-radius:2px;cursor:pointer">Close</button>
     </div>
   </div>
@@ -446,6 +400,17 @@ body{background:var(--navy);color:var(--cream);font-family:'IBM Plex Mono',monos
   <div style="display:flex;gap:10px;margin-top:16px">
     <button onclick="importEvent()" style="background:var(--gold);color:var(--navy);border:none;font-family:'Bebas Neue',sans-serif;font-size:1rem;letter-spacing:0.08em;padding:12px 24px;border-radius:2px;cursor:pointer;flex:1">Import</button>
     <button onclick="document.getElementById('import-overlay').classList.remove('open')" class="btn-ghost">Cancel</button>
+  </div>
+</div>
+
+<!-- Export Overlay -->
+<div class="overlay" id="export-overlay">
+  <h2>Export Event JSON</h2>
+  <div style="font-family:'IBM Plex Mono',monospace;font-size:0.72rem;color:var(--sky);margin-bottom:12px;line-height:1.7">Tap Copy All, then paste into Claude to edit your event.</div>
+  <textarea id="export-json-out" readonly style="width:100%;min-height:200px;background:#0d1f38;color:#a8c8f0;border:1px solid var(--sky);border-radius:2px;padding:12px;font-family:'IBM Plex Mono',monospace;font-size:0.65rem;line-height:1.5;resize:none"></textarea>
+  <div style="display:flex;gap:10px;margin-top:14px">
+    <button id="export-copy-btn" onclick="copyExportJSON()" style="background:var(--gold);color:var(--navy);border:none;font-family:'Bebas Neue',sans-serif;font-size:1rem;letter-spacing:0.08em;padding:12px 24px;border-radius:2px;cursor:pointer;flex:1">Copy All</button>
+    <button onclick="document.getElementById('export-overlay').classList.remove('open')" class="btn-ghost">Close</button>
   </div>
 </div>
 
@@ -531,11 +496,10 @@ body{background:var(--navy);color:var(--cream);font-family:'IBM Plex Mono',monos
 //   cp_api_key             = Anthropic API key
 // ═══════════════════════════════════════════════════════════
 
-var events  = (function(){ try{ return JSON.parse(localStorage.getItem('cp_events') ||'[]'); }catch(e){ return []; } })();
-var recipes = (function(){ try{ return JSON.parse(localStorage.getItem('cp_recipes')||'[]'); }catch(e){ return []; } })();
+var events  = JSON.parse(localStorage.getItem('cp_events')  || '[]');
+var recipes = JSON.parse(localStorage.getItem('cp_recipes') || '[]');
 var chatHistory = [];
 var activeEventIdx = parseInt(localStorage.getItem('cp_active_event') || '0');
-if (isNaN(activeEventIdx) || activeEventIdx < 0 || activeEventIdx >= events.length) activeEventIdx = 0;
 var currentRecipeId = null;
 var recipeStepsDone = {};
 var shopFilter_cur = 'all';
@@ -783,79 +747,6 @@ async function fetchEventWeather() {
   } catch(e) {}
 }
 
-// ── Invite ────────────────────────────────────────────────────
-function openInvite(i) {
-  var ev = events[i];
-  if (!ev) return;
-  // If missing fields, show setup form inside the overlay
-  if (!ev.address || !ev.inviteHighlight) {
-    document.getElementById('invite-card').style.display = 'none';
-    document.getElementById('invite-setup').style.display = 'block';
-    document.getElementById('invite-setup-addr').value = ev.address || '';
-    document.getElementById('invite-setup-hl').value = ev.inviteHighlight || '';
-    document.getElementById('invite-setup-idx').value = i;
-    document.getElementById('invite-overlay').style.display = 'block';
-    return;
-  }
-  document.getElementById('invite-setup').style.display = 'none';
-  document.getElementById('invite-card').style.display = 'flex';
-  // Event name
-  document.getElementById('invite-event-name').textContent = ev.name;
-  // Date + time
-  var dt = '';
-  if (ev.date) {
-    var parts = ev.date.split('-');
-    var d = new Date(parseInt(parts[0]), parseInt(parts[1])-1, parseInt(parts[2]));
-    var months = ['January','February','March','April','May','June','July','August','September','October','November','December'];
-    var days = ['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'];
-    dt = days[d.getDay()] + ', ' + months[d.getMonth()] + ' ' + d.getDate() + ', ' + d.getFullYear();
-  }
-  if (ev.time) {
-    var tp = ev.time.split(':').map(Number);
-    var hr = tp[0] > 12 ? tp[0]-12 : tp[0]||12;
-    var mn = tp[1] < 10 ? '0'+tp[1] : tp[1];
-    var ampm = tp[0] >= 12 ? 'PM' : 'AM';
-    dt += ' \u00b7 ' + hr + ':' + mn + ' ' + ampm;
-  }
-  document.getElementById('invite-datetime').textContent = dt;
-  document.getElementById('invite-address').textContent = ev.address;
-  document.getElementById('invite-highlight').textContent = ev.inviteHighlight;
-  document.getElementById('invite-overlay').style.display = 'block';
-}
-function saveInviteSetup() {
-  var i = parseInt(document.getElementById('invite-setup-idx').value);
-  var ev = events[i]; if (!ev) return;
-  ev.address = document.getElementById('invite-setup-addr').value.trim();
-  ev.inviteHighlight = document.getElementById('invite-setup-hl').value.trim();
-  saveEvents();
-  openInvite(i);
-}
-function closeInvite() {
-  document.getElementById('invite-overlay').style.display = 'none';
-}
-function shareInviteImage() {
-  var card = document.getElementById('invite-card');
-  var btnRow = document.querySelector('#invite-overlay > div:first-child');
-  if (btnRow) btnRow.style.visibility = 'hidden';
-  html2canvas(card, {backgroundColor:'#0a1628',scale:2,useCORS:true,width:card.scrollWidth,height:card.scrollHeight}).then(function(canvas){
-    if (btnRow) btnRow.style.visibility = '';
-    canvas.toBlob(function(blob){
-      var file = new File([blob],'invite.png',{type:'image/png'});
-      if (navigator.share && navigator.canShare && navigator.canShare({files:[file]})) {
-        navigator.share({files:[file],title:'You are invited!'});
-      } else {
-        var url = URL.createObjectURL(blob);
-        var a = document.createElement('a');
-        a.href = url; a.download = 'invite.png'; a.click();
-        setTimeout(function(){ URL.revokeObjectURL(url); },1000);
-      }
-    },'image/png');
-  }).catch(function(){
-    if (btnRow) btnRow.style.visibility = '';
-    alert('Use your screenshot button to capture the invite.');
-  });
-}
-
 // ── Menu ──────────────────────────────────────────────────────
 function openMenu(i) {
   var ev = events[i];
@@ -919,6 +810,26 @@ function closeMenu() {
   document.getElementById('menu-overlay').style.display = 'none';
 }
 
+function printMenu() {
+  // Scale menu content to fit one page
+  var content = document.getElementById('menu-content');
+  var pageHeight = 900; // approximate printable height in px
+  var contentHeight = content.scrollHeight;
+  if (contentHeight > pageHeight) {
+    var scale = pageHeight / contentHeight;
+    content.style.transform = 'scale(' + scale + ')';
+    content.style.transformOrigin = 'top left';
+    content.style.width = (100 / scale) + '%';
+  }
+  window.print();
+  // Reset after print
+  setTimeout(function(){
+    content.style.transform = '';
+    content.style.transformOrigin = '';
+    content.style.width = '';
+  }, 1000);
+}
+
 function shareMenuImage() {
   var menuContent = document.getElementById('menu-content');
   var btnRow = document.querySelector('#menu-overlay > div:first-child');
@@ -962,6 +873,7 @@ function shareMenuImage() {
 
 function getCountdown(ev) {
   if (!ev.date || !ev.time) return '';
+  var parts = ev.time.split(':').map(Number);
   var eventDate = new Date(ev.date + 'T' + ev.time + ':00');
   var now = new Date();
   var diff = eventDate - now;
@@ -1069,7 +981,7 @@ function renderShopping() {
 
 function shopFilter(f, btn) {
   shopFilter_cur = f;
-  document.querySelectorAll('#shop-filter-btns .shop-filter-btn').forEach(function(b){ b.classList.remove('active'); });
+  document.querySelectorAll('.shop-filter-btn').forEach(function(b){ b.classList.remove('active'); });
   btn.classList.add('active');
   renderShopping();
 }
@@ -1219,20 +1131,6 @@ function saveTaskEdit() {
 }
 
 
-function exportRecipes() {
-  var visible = recipes.filter(function(r){ return !r.hidden; });
-  if (!visible.length) { alert('No recipes to export.'); return; }
-  var payload = JSON.stringify(visible, null, 2);
-  var blob = new Blob([payload], {type: 'application/json'});
-  var url = URL.createObjectURL(blob);
-  var a = document.createElement('a');
-  var date = new Date().toISOString().slice(0,10);
-  a.href = url;
-  a.download = 'capcooks-recipes-' + date + '.json';
-  a.click();
-  setTimeout(function(){ URL.revokeObjectURL(url); }, 1000);
-}
-
 var recipeFilter_cur = 'all';
 
 function recipeFilter(cat, btn) {
@@ -1243,31 +1141,12 @@ function recipeFilter(cat, btn) {
 }
 
 function renderRecipes() {
-  var visible = recipes.filter(function(r){ return !r.hidden; });
-  // Build category counts
-  var cats = {};
-  visible.forEach(function(r){ var c = r.category||'Other'; cats[c]=(cats[c]||0)+1; });
-
-  // Update filter button labels with counts
-  var btns = document.querySelectorAll('#recipe-filter-btns .shop-filter-btn');
-  btns.forEach(function(btn){
-    var cat = btn.getAttribute('data-cat');
-    if (!cat) return;
-    var count = cat === 'all' ? visible.length : (cats[cat] || 0);
-    var label = cat === 'all' ? 'All' : cat;
-    btn.textContent = label + ' (' + count + ')';
-  });
-
-  // Hide stats bar (counts are now on buttons)
-  var statsEl = document.getElementById('recipe-stats');
-  if(statsEl) statsEl.style.display = 'none';
-
-  var filtered = visible.filter(function(r){
+  var html = recipes.filter(function(r){
+    if (r.hidden) return false;
     if (recipeFilter_cur === 'all') return true;
     return (r.category || '') === recipeFilter_cur;
-  });
-  var html = filtered.map(function(r){
-    var icons = {'Main':'🍖','Side':'🥗','Dessert':'🍋','Drink':'🥤','Component':'🧂','Snack':'🥜','Sauce':'🫙','Soup':'🍲','Bread':'🍞'};
+  }).map(function(r){
+    var icons = {'Main':'🍖','Side':'🥗','Dessert':'🍋','Drink':'🥤','Component':'🧂','Snack':'🥜'};
     var icon = icons[r.category] || '🍽';
     return '<div class="recipe-card" onclick="openRecipeDetail(\'' + r.id + '\')">' +
       (r.finishedPhoto ? '<img class="recipe-thumb" src="' + r.finishedPhoto + '" alt="">' : '<div class="recipe-icon">' + icon + '</div>') +
@@ -1478,7 +1357,7 @@ function openEvOverlay() {
     var active   = i === activeEventIdx;
     var archived = ev.archived === true;
     var total    = (ev.timeline||[]).length;
-    var state    = active ? getActiveState() : getEvState(ev.id);
+    var state    = active ? getActiveState() : (function(){ try { return JSON.parse(localStorage.getItem('ev_state_' + ev.id) || '{}'); } catch(e){ return {}; } })();
     var done     = Object.keys(state).filter(function(k){ return state[k]===true&&parseInt(k)<total; }).length;
     var pct      = total ? Math.round(done/total*100) : 0;
     var complete = total > 0 && done >= total;
@@ -1513,7 +1392,6 @@ function openEvOverlay() {
         '</div>' +
         '<div style="display:flex;align-items:center;justify-content:space-between;margin-top:6px">' +
         '<div style="flex:1">'+status+'</div>' +
-        '<button onclick="event.stopPropagation();openInvite('+i+')" style="background:none;border:1px solid var(--sky);color:var(--sky);font-family:\'IBM Plex Mono\',monospace;font-size:0.58rem;padding:4px 10px;border-radius:2px;cursor:pointer;white-space:nowrap;flex-shrink:0;margin-left:8px">Invite</button>' +
         (ev.menu && ev.menu.length ? '<button onclick="event.stopPropagation();openMenu('+i+')" style="background:none;border:1px solid #c9a84c;color:#c9a84c;font-family:\'IBM Plex Mono\',monospace;font-size:0.58rem;padding:4px 10px;border-radius:2px;cursor:pointer;white-space:nowrap;flex-shrink:0;margin-left:8px">Menu</button>' : '') +
         '</div>' +
 
@@ -1650,7 +1528,6 @@ function importEvent() {
     id: uid(),
     name: data.name, date: data.date,
     time: data.time||'17:00', guests: data.guests||0, venue: data.venue||'',
-    address: data.address||'', inviteHighlight: data.inviteHighlight||'',
     timeline: (data.timeline||[]).map(function(t){ return Object.assign({},t,{done:false}); }),
     shoppingList: (data.shoppingList||[]).map(function(i){ return Object.assign({id:uid(),checked:false},i); }),
     menu: data.menu || []
@@ -1668,6 +1545,43 @@ function importEvent() {
   document.getElementById('import-overlay').classList.remove('open');
   renderChecklist(); renderShopping();
   alert('Imported: ' + newEv.name);
+}
+
+// ── Export Event JSON ────────────────────────────────────────
+function exportEventJSON() {
+  var ev = events[activeEventIdx];
+  if (!ev) { alert('No active event to export.'); return; }
+  var exportData = {
+    name: ev.name, date: ev.date, time: ev.time,
+    guests: ev.guests, venue: ev.venue,
+    timeline: (ev.timeline||[]).map(function(t){
+      var out = Object.assign({},t); delete out.done; return out;
+    }),
+    shoppingList: (ev.shoppingList||[]).map(function(i){
+      var out = Object.assign({},i); delete out.checked; delete out.id; return out;
+    }),
+    menu: ev.menu || [],
+    recipes: recipes
+  };
+  var json = JSON.stringify(exportData, null, 2);
+  // Show in a copyable overlay
+  var ov = document.getElementById('export-overlay');
+  document.getElementById('export-json-out').value = json;
+  ov.classList.add('open');
+}
+function copyExportJSON() {
+  var ta = document.getElementById('export-json-out');
+  ta.select();
+  try {
+    navigator.clipboard.writeText(ta.value).then(function(){
+      document.getElementById('export-copy-btn').textContent = '✓ Copied!';
+      setTimeout(function(){ document.getElementById('export-copy-btn').textContent = 'Copy All'; }, 2000);
+    });
+  } catch(e) {
+    document.execCommand('copy');
+    document.getElementById('export-copy-btn').textContent = '✓ Copied!';
+    setTimeout(function(){ document.getElementById('export-copy-btn').textContent = 'Copy All'; }, 2000);
+  }
 }
 
 // ── Add Shopping Item ────────────────────────────────────────
@@ -1779,6 +1693,7 @@ function hardReset() {
 
 
 // ── Chef AI ───────────────────────────────────────────────────
+var chatHistory = [];
 function appendMsg(role, html) {
   var div = document.createElement('div');
   div.className = 'msg ' + role;
@@ -1840,9 +1755,7 @@ function buildSystemPrompt() {
   var done  = total ? Object.keys(state).filter(function(k){return state[k]===true;}).length : 0;
   var pending = (ev.timeline||[]).filter(function(_,i){return !state[i];}).map(function(t){return t.day+': '+t.title;}).slice(0,20);
   var recipeList = recipes.filter(function(r){return !r.hidden;}).map(function(r){return r.name+' ('+r.baseServings+' servings)';});
-  var todayFull = new Date().toLocaleDateString('en-US',{weekday:'long',month:'long',day:'numeric',year:'numeric'});
   return 'You are Chef, an AI assistant for Capritta catering events.\n\n' +
-    'TODAY: ' + todayFull + '\n' +
     'CURRENT EVENT: ' + ev.name + '\n' +
     'Date: ' + (ev.date||'TBD') + ' | Guests: ' + (ev.guests||'?') + ' | Venue: ' + (ev.venue||'?') + '\n' +
     'Progress: ' + done + ' of ' + total + ' tasks complete\n\n' +
@@ -1931,7 +1844,13 @@ async function parseRecipe() {
   }
 }
 
-function fixChatHeight() { /* handled by CSS flex layout */ }
+function fixChatHeight() {
+  var wrap = document.getElementById('chat-wrap');
+  var tab  = document.getElementById('tab-chef');
+  if (!wrap||!tab) return;
+  var avail = document.getElementById('main').clientHeight - tab.offsetTop;
+  wrap.style.height = Math.max(300, avail) + 'px';
+}
 
 
 // ── URL clearall param ────────────────────────────────────────
@@ -1985,7 +1904,7 @@ function seedData() {
   var bbqState = {};
   BBQ_TIMELINE.forEach(function(_, i){ bbqState[i] = true; });
   // Save ONLY to BBQ's own key
-  localStorage.setItem('cp_ev_STATE_' + bbqId, JSON.stringify(bbqState));
+  localStorage.setItem('ev_state_' + bbqId, JSON.stringify(bbqState));
 
   // May 16 starts empty -- nothing to save
 
