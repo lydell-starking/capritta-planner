@@ -360,8 +360,7 @@ body{background:var(--navy);color:var(--cream);font-family:'IBM Plex Mono',monos
   <h2>Events</h2>
   <div id="ev-list" style="display:flex;flex-direction:column;gap:8px;margin-bottom:20px"></div>
   <button class="btn-gold" style="width:100%;padding:12px;font-size:1rem;margin-bottom:8px" onclick="newEventViaChat()">+ Plan New Event with Chef</button>
-  <button onclick="document.getElementById('ev-overlay').classList.remove('open');document.getElementById('import-overlay').classList.add('open')" style="width:100%;padding:12px;font-size:1rem;margin-bottom:8px;background:none;border:1px solid var(--gold);color:var(--gold);font-family:'Bebas Neue',sans-serif;letter-spacing:0.08em;border-radius:2px;cursor:pointer">&#8659; Import from Chef JSON</button>
-  <button onclick="exportEventJSON()" style="width:100%;padding:12px;font-size:1rem;margin-bottom:10px;background:none;border:1px solid var(--sky);color:var(--sky);font-family:'Bebas Neue',sans-serif;letter-spacing:0.08em;border-radius:2px;cursor:pointer">&#8679; Export Current Event JSON</button>
+  <button onclick="document.getElementById('ev-overlay').classList.remove('open');document.getElementById('import-overlay').classList.add('open')" style="width:100%;padding:12px;font-size:1rem;margin-bottom:10px;background:none;border:1px solid var(--gold);color:var(--gold);font-family:'Bebas Neue',sans-serif;letter-spacing:0.08em;border-radius:2px;cursor:pointer">&#8659; Import from Chef JSON</button>
   <button class="btn-ghost" style="display:block;margin:0 auto" onclick="closeEvOverlay()">Close</button>
 </div>
 
@@ -400,17 +399,6 @@ body{background:var(--navy);color:var(--cream);font-family:'IBM Plex Mono',monos
   <div style="display:flex;gap:10px;margin-top:16px">
     <button onclick="importEvent()" style="background:var(--gold);color:var(--navy);border:none;font-family:'Bebas Neue',sans-serif;font-size:1rem;letter-spacing:0.08em;padding:12px 24px;border-radius:2px;cursor:pointer;flex:1">Import</button>
     <button onclick="document.getElementById('import-overlay').classList.remove('open')" class="btn-ghost">Cancel</button>
-  </div>
-</div>
-
-<!-- Export Overlay -->
-<div class="overlay" id="export-overlay">
-  <h2>Export Event JSON</h2>
-  <div style="font-family:'IBM Plex Mono',monospace;font-size:0.72rem;color:var(--sky);margin-bottom:12px;line-height:1.7">Tap Copy All, then paste into Claude to edit your event.</div>
-  <textarea id="export-json-out" readonly style="width:100%;min-height:200px;background:#0d1f38;color:#a8c8f0;border:1px solid var(--sky);border-radius:2px;padding:12px;font-family:'IBM Plex Mono',monospace;font-size:0.65rem;line-height:1.5;resize:none"></textarea>
-  <div style="display:flex;gap:10px;margin-top:14px">
-    <button id="export-copy-btn" onclick="copyExportJSON()" style="background:var(--gold);color:var(--navy);border:none;font-family:'Bebas Neue',sans-serif;font-size:1rem;letter-spacing:0.08em;padding:12px 24px;border-radius:2px;cursor:pointer;flex:1">Copy All</button>
-    <button onclick="document.getElementById('export-overlay').classList.remove('open')" class="btn-ghost">Close</button>
   </div>
 </div>
 
@@ -1182,7 +1170,7 @@ function openRecipeDetail(id, targetServings) {
     r.ingredients.forEach(function(ing){
       var amt = parseFloat(ing.amount) || 0;
       var scaled = amt * scale;
-      html += '<tr><td>' + escH(ing.item) + '</td><td>' + (amt ? scaled.toFixed(scaled%1?2:0) : '') + ' ' + escH(ing.unit||'') + '</td><td>' + escH(ing.note||'') + '</td></tr>';
+      html += '<tr><td>' + escH(ing.item) + '</td><td>' + (amt ? scaled.toFixed(scaled%1?2:0) : '') + ' ' + escH(scaleUnit(ing.unit||'', scale)) + '</td><td>' + escH(ing.note||'') + '</td></tr>';
     });
     html += '</table>';
   }
@@ -1218,6 +1206,15 @@ function openRecipeDetail(id, targetServings) {
   document.getElementById('recipe-detail').classList.add('open');
 }
 
+function scaleUnit(unit, scale) {
+  if (!unit || scale === 1) return unit;
+  // Scale embedded weights/volumes in parentheses e.g. "sticks (226g)" -> "sticks (452g)"
+  return unit.replace(/\((\d+(?:\.\d+)?)(g|ml|kg|oz|lb)\)/g, function(match, num, suffix) {
+    var scaledNum = parseFloat(num) * scale;
+    return '(' + Math.round(scaledNum) + suffix + ')';
+  });
+}
+
 function scaleRecipe(id, delta) {
   var r = recipes.find(function(x){ return x.id === id; }); if (!r) return;
   var inp = document.getElementById('scale-input-' + id); if (!inp) return;
@@ -1232,7 +1229,7 @@ function scaleRecipe(id, delta) {
     var ing = r.ingredients[i]; if (!ing) return;
     var amt = parseFloat(ing.amount) || 0;
     var scaled = amt * scale;
-    row.cells[1].textContent = (amt ? scaled.toFixed(scaled%1?2:0) : '') + ' ' + (ing.unit||'');
+    row.cells[1].textContent = (amt ? scaled.toFixed(scaled%1?2:0) : '') + ' ' + scaleUnit(ing.unit||'', scale);
   });
 }
 
@@ -1545,43 +1542,6 @@ function importEvent() {
   document.getElementById('import-overlay').classList.remove('open');
   renderChecklist(); renderShopping();
   alert('Imported: ' + newEv.name);
-}
-
-// ── Export Event JSON ────────────────────────────────────────
-function exportEventJSON() {
-  var ev = events[activeEventIdx];
-  if (!ev) { alert('No active event to export.'); return; }
-  var exportData = {
-    name: ev.name, date: ev.date, time: ev.time,
-    guests: ev.guests, venue: ev.venue,
-    timeline: (ev.timeline||[]).map(function(t){
-      var out = Object.assign({},t); delete out.done; return out;
-    }),
-    shoppingList: (ev.shoppingList||[]).map(function(i){
-      var out = Object.assign({},i); delete out.checked; delete out.id; return out;
-    }),
-    menu: ev.menu || [],
-    recipes: recipes
-  };
-  var json = JSON.stringify(exportData, null, 2);
-  // Show in a copyable overlay
-  var ov = document.getElementById('export-overlay');
-  document.getElementById('export-json-out').value = json;
-  ov.classList.add('open');
-}
-function copyExportJSON() {
-  var ta = document.getElementById('export-json-out');
-  ta.select();
-  try {
-    navigator.clipboard.writeText(ta.value).then(function(){
-      document.getElementById('export-copy-btn').textContent = '✓ Copied!';
-      setTimeout(function(){ document.getElementById('export-copy-btn').textContent = 'Copy All'; }, 2000);
-    });
-  } catch(e) {
-    document.execCommand('copy');
-    document.getElementById('export-copy-btn').textContent = '✓ Copied!';
-    setTimeout(function(){ document.getElementById('export-copy-btn').textContent = 'Copy All'; }, 2000);
-  }
 }
 
 // ── Add Shopping Item ────────────────────────────────────────
