@@ -309,6 +309,10 @@ body{background:var(--navy);color:var(--cream);font-family:'IBM Plex Mono',monos
         <span class="parse-status" id="parse-status"></span>
       </div>
     </div>
+    <div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:8px;align-items:center" id="recipe-scope-row">
+      <button id="recipe-scope-btn" onclick="toggleRecipeScope()" style="background:var(--gold);color:var(--navy);border:none;font-family:'IBM Plex Mono',monospace;font-size:0.6rem;letter-spacing:0.08em;padding:6px 12px;border-radius:2px;cursor:pointer;font-weight:600">This Event</button>
+      <span id="recipe-scope-label" style="font-size:0.6rem;color:var(--muted);letter-spacing:0.06em"></span>
+    </div>
     <div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:12px" id="recipe-filter-btns">
       <button class="shop-filter-btn active" onclick="recipeFilter('all',this)">All</button>
       <button class="shop-filter-btn" onclick="recipeFilter('Main',this)">Main</button>
@@ -505,6 +509,19 @@ body{background:var(--navy);color:var(--cream);font-family:'IBM Plex Mono',monos
 
 var events  = JSON.parse(localStorage.getItem('cp_events')  || '[]');
 var recipes = JSON.parse(localStorage.getItem('cp_recipes') || '[]');
+
+// Sort helper — used to keep timelines in chronological order
+var MONTH_ORDER_S = ['jan','feb','mar','apr','may','jun','jul','aug','sep','oct','nov','dec'];
+function timelineSort(a, b) {
+  var da = (a.day||'').toLowerCase(), db = (b.day||'').toLowerCase();
+  function mNum(s){ for(var m=0;m<MONTH_ORDER_S.length;m++){ if(s.indexOf(MONTH_ORDER_S[m])>-1) return m; } return 99; }
+  function dNum(s){ var m=s.match(/\b(\d{1,2})\b/); return m?parseInt(m[1]):99; }
+  var ma=mNum(da),mb=mNum(db); if(ma!==mb) return ma-mb;
+  var na=dNum(da),nb=dNum(db); if(na!==nb) return na-nb;
+  var ta=a.time||'00:00',tb=b.time||'00:00'; return ta<tb?-1:ta>tb?1:0;
+}
+function sortEventTimelines(evList){ evList.forEach(function(ev){ if(ev.timeline) ev.timeline.sort(timelineSort); }); }
+sortEventTimelines(events);
 var chatHistory = [];
 var activeEventIdx = parseInt(localStorage.getItem('cp_active_event') || '0');
 var currentRecipeId = null;
@@ -645,6 +662,7 @@ function renderChecklist() {
   var ev = events[activeEventIdx];
   if (!ev) return;
   document.getElementById('active-event-name').textContent = ev.name.toUpperCase() + ' \u25be';
+
   var tasks = ev.timeline || [];
   var state = getActiveState();
   var ts    = getActiveTs();
@@ -1181,6 +1199,7 @@ function saveTaskEdit() {
   ev.timeline[idx].day  =document.getElementById('edit-task-day').value.trim()||ev.timeline[idx].day;
   ev.timeline[idx].time =document.getElementById('edit-task-time').value.trim()||null;
   ev.timeline[idx].note =document.getElementById('edit-task-note').value.trim();
+  sortEventTimelines(events);
   saveEvents();
   document.getElementById('edit-task-overlay').classList.remove('open');
   renderChecklist();
@@ -1188,6 +1207,46 @@ function saveTaskEdit() {
 
 
 var recipeFilter_cur = 'all';
+var recipeScope_eventOnly = true; // default: show event recipes when in an event
+
+function getEventRecipeIds() {
+  var ev = events[activeEventIdx];
+  if (!ev || !ev.timeline) return null;
+  var ids = {};
+  ev.timeline.forEach(function(t){ if (t.recipe) ids[t.recipe] = true; });
+  return Object.keys(ids);
+}
+
+function toggleRecipeScope() {
+  recipeScope_eventOnly = !recipeScope_eventOnly;
+  renderRecipes();
+}
+
+function updateRecipeScopeUI(eventIds) {
+  var row = document.getElementById('recipe-scope-row');
+  var btn = document.getElementById('recipe-scope-btn');
+  var lbl = document.getElementById('recipe-scope-label');
+  if (!row) return;
+  var ev = events[activeEventIdx];
+  if (!ev || !eventIds || !eventIds.length) {
+    row.style.display = 'none';
+    return;
+  }
+  row.style.display = 'flex';
+  if (recipeScope_eventOnly) {
+    btn.textContent = 'All Recipes';
+    btn.style.background = 'none';
+    btn.style.border = '1px solid var(--muted)';
+    btn.style.color = 'var(--muted)';
+    lbl.textContent = ev.name + ' \u00b7 ' + eventIds.length + ' recipes';
+  } else {
+    btn.textContent = 'This Event';
+    btn.style.background = 'var(--gold)';
+    btn.style.border = 'none';
+    btn.style.color = 'var(--navy)';
+    lbl.textContent = 'Showing all ' + recipes.filter(function(r){return !r.hidden;}).length + ' recipes';
+  }
+}
 
 function recipeFilter(cat, btn) {
   recipeFilter_cur = cat;
@@ -1197,18 +1256,27 @@ function recipeFilter(cat, btn) {
 }
 
 function renderRecipes() {
+  var eventIds = getEventRecipeIds();
   var all = recipes.filter(function(r){ return !r.hidden; });
+
+  // Apply event scope filter
+  var scopeFiltered = (recipeScope_eventOnly && eventIds && eventIds.length)
+    ? all.filter(function(r){ return eventIds.indexOf(r.id) > -1; })
+    : all;
+
+  // Stats bar — show scoped count
   var cats = {};
-  all.forEach(function(r){ var c = r.category||'Other'; cats[c]=(cats[c]||0)+1; });
-  var statsStr = all.length + ' recipes';
+  scopeFiltered.forEach(function(r){ var c = r.category||'Other'; cats[c]=(cats[c]||0)+1; });
+  var statsStr = scopeFiltered.length + ' recipes';
   ['Main','Side','Dessert','Drink','Component','Bread','Snack'].forEach(function(c){ if(cats[c]) statsStr += ' \u00b7 ' + c + ' ' + cats[c]; });
   Object.keys(cats).forEach(function(c){
     if(['Main','Side','Dessert','Drink','Component','Bread','Snack'].indexOf(c)===-1) statsStr += ' \u00b7 ' + c + ' ' + cats[c];
   });
   var statsEl = document.getElementById('recipe-stats');
   if (statsEl) statsEl.textContent = statsStr;
+  updateRecipeScopeUI(eventIds);
 
-  var html = all.filter(function(r){
+  var html = scopeFiltered.filter(function(r){
     if (recipeFilter_cur === 'all') return true;
     return (r.category || '') === recipeFilter_cur;
   }).map(function(r){
@@ -1567,10 +1635,9 @@ function unarchiveEvent(i) {
 function closeEvOverlay() { document.getElementById('ev-overlay').classList.remove('open'); }
 
 function selectEvent(i) {
-  // selectEvent ONLY changes which event is active.
-  // It does NOT touch any event's stored state.
   activeEventIdx = i;
   localStorage.setItem('cp_active_event', i);
+  recipeScope_eventOnly = true;
   closeEvOverlay();
   renderChecklist();
   renderShopping();
@@ -1604,7 +1671,6 @@ function importEvent() {
     id: uid(),
     name: data.name, date: data.date,
     time: data.time||'17:00', guests: data.guests||0, venue: data.venue||'',
-    address: data.address||'', inviteHighlight: data.inviteHighlight||'',
     timeline: (data.timeline||[]).map(function(t){ return Object.assign({},t,{done:false}); }),
     shoppingList: (data.shoppingList||[]).map(function(i){ return Object.assign({id:uid(),checked:false},i); }),
     menu: data.menu || []
@@ -1911,7 +1977,8 @@ function seedData() {
   var mayId  = uid();
 
   var BBQ_TIMELINE  = [{"day": "Friday April 17 (Done)", "time": null, "title": "Make Candied Jalapenos (Cowboy Candy)", "note": "Curing in jars -- shake daily", "recipe": "r-cowboy-candy"}, {"day": "Saturday April 18", "time": null, "title": "Shopping run -- buy today list", "note": "Sam's Club + GFS"}, {"day": "Saturday April 18", "time": null, "title": "Shake jalapeno jars", "note": ""}, {"day": "Sunday April 19", "time": null, "title": "Make pickled red onions", "note": "Lydell's own recipe"}, {"day": "Sunday April 19", "time": null, "title": "Make Key Lime Curd", "note": "Cook to 160F, strain, refrigerate", "recipe": "r-keylime-may"}, {"day": "Sunday April 19", "time": null, "title": "Make chipotle aioli", "note": "Mayo + chipotles + garlic + lime -- refrigerate overnight"}, {"day": "Sunday April 19", "time": null, "title": "Make KC BBQ sauce", "note": "Simmer 20 min, cool, refrigerate", "recipe": "r-kc"}, {"day": "Sunday April 19", "time": null, "title": "Make SC mustard sauce", "note": "Whisk together, refrigerate", "recipe": "r-sc"}, {"day": "Sunday April 19", "time": null, "title": "Make NC vinegar sauce", "note": "Shake together, refrigerate", "recipe": "r-nc"}, {"day": "Monday April 20", "time": null, "title": "Apply rub to pork butts", "note": "All 4 butts -- refrigerate overnight"}, {"day": "Monday April 20", "time": null, "title": "Make lime simple syrup", "note": "For lavender lemonade station", "recipe": "r-lime-syrup"}, {"day": "Monday April 20", "time": null, "title": "Make rosemary simple syrup", "note": "For grapefruit spritzer", "recipe": "r-rosemary-syrup"}, {"day": "Tuesday April 21", "time": null, "title": "Make Cajun boiled peanuts", "note": "Start early -- simmer 4 hrs", "recipe": "r-cajun-peanuts"}, {"day": "Tuesday April 21", "time": null, "title": "Make Bourbon Baked Bean Trio", "note": "Bake 1.5 hrs, cool, refrigerate", "recipe": "r-baked-beans"}, {"day": "Tuesday April 21", "time": null, "title": "Make Watermelon Feta Salad cups", "note": "Cut watermelon, portion into cups, top with feta", "recipe": "r-watermelon"}, {"day": "Tuesday April 21", "time": null, "title": "Make Smashed Potato Salad", "note": "Boil, smash, dress, refrigerate", "recipe": "r-potato-salad"}, {"day": "Tuesday April 21", "time": null, "title": "Make Key Lime Cups -- curd layer", "note": "Fill cups with curd, refrigerate", "recipe": "r-keylime-may"}, {"day": "Tuesday April 21", "time": null, "title": "Set up toppings bar", "note": "Cowboy candy, pickled onions, aioli, crispy onions, pickles"}, {"day": "Tuesday April 21", "time": null, "title": "Fill Traeger hopper", "note": "Have backup bag ready"}, {"day": "Tuesday April 21", "time": null, "title": "Pack coolers (no ice yet)", "note": "Ice goes in Wednesday morning"}, {"day": "Tuesday April 21", "time": "22:00", "title": "Start Traeger at 225F -- fat cap UP", "note": "4 pork butts -- full hopper, runs overnight"}, {"day": "Wednesday April 22 -- Event Day", "time": "04:00", "title": "Check + refill pellet hopper", "note": "~6 hr mark from 10pm start"}, {"day": "Wednesday April 22 -- Event Day", "time": "07:30", "title": "Add ice to coolers", "note": ""}, {"day": "Wednesday April 22 -- Event Day", "time": "08:00", "title": "Mix grapefruit rosemary spritzer", "note": "Grapefruit juice + rosemary syrup + sparkling water -- stir gently", "recipe": "r-spritzer"}, {"day": "Wednesday April 22 -- Event Day", "time": "08:00", "title": "Load butterfly pea flower tea dispenser", "note": "Color change effect", "recipe": "r-tea"}, {"day": "Wednesday April 22 -- Event Day", "time": "09:00", "title": "Set up lavender lemonade station", "note": "Lavender syrup + lemonade + lime syrup -- self serve"}, {"day": "Wednesday April 22 -- Event Day", "time": "10:00", "title": "Bump Traeger to 250F", "note": "Monitor pork temp on phone"}, {"day": "Wednesday April 22 -- Event Day", "time": "11:00", "title": "Set up adult spirits station", "note": "Tequila, vodka, whiskey with mixers"}, {"day": "Wednesday April 22 -- Event Day", "time": "11:30", "title": "Reheat Cajun peanuts", "note": "Low heat -- just warm through"}, {"day": "Wednesday April 22 -- Event Day", "time": "12:00", "title": "Load ISI whipping canister", "note": "Cream + powdered sugar + vanilla + 2 N2O cartridges"}, {"day": "Wednesday April 22 -- Event Day", "time": "12:00", "title": "Reheat baked beans", "note": "Add splash of water if too thick. Heat to 165F.", "recipe": "r-baked-beans"}, {"day": "Wednesday April 22 -- Event Day", "time": "13:00", "title": "Pull pork at 203-205F", "note": "Wrap in butcher paper. Rest in cooler minimum 1-2 hrs.", "recipe": "r-pulled-pork"}, {"day": "Wednesday April 22 -- Event Day", "time": "14:00", "title": "Set up drink station + signage", "note": "All dispensers out, labels on, ice filled"}, {"day": "Wednesday April 22 -- Event Day", "time": "14:30", "title": "Shred pulled pork", "note": "After full rest -- pull and season", "recipe": "r-pulled-pork"}, {"day": "Wednesday April 22 -- Event Day", "time": "15:00", "title": "Load sliders into chafing dishes", "note": "Pork on bottom, rolls separate, toppings bar alongside"}, {"day": "Wednesday April 22 -- Event Day", "time": "15:30", "title": "Final check -- all stations ready", "note": "Walk every station. Verify temps, labels, utensils, drinks."}, {"day": "Wednesday April 22 -- Event Day", "time": "16:00", "title": "Finish key lime cups", "note": "Dispense whipped cream + lime zest on all 125 cups", "recipe": "r-keylime-may"}, {"day": "Wednesday April 22 -- Event Day", "time": "16:30", "title": "Plate watermelon feta salad", "note": "Garnish with mint and chili flake", "recipe": "r-watermelon"}, {"day": "Wednesday April 22 -- Event Day", "time": "16:45", "title": "Set out potato salad", "note": "Garnish with scallions and crispy onions", "recipe": "r-potato-salad"}, {"day": "Wednesday April 22 -- Event Day", "time": "17:00", "title": "OPEN SERVING", "note": "5:00pm -- 125+ guests"}, {"day": "Wednesday April 22 -- Event Day", "time": "21:00", "title": "Break down + clean up", "note": "All food put away within 2 hours of service end"}];
-  var MAY_TIMELINE  = [{"day": "Thursday May 14", "time": null, "title": "Make cheesecakes", "note": "2 cakes -- refrigerate. Keeps 5 days.", "recipe": "r-cheesecake"}, {"day": "Thursday May 14", "time": null, "title": "Make key lime pies", "note": "4 pies -- refrigerate. Keeps 5 days.", "recipe": "r-keylime-may"}, {"day": "Friday May 15 -- Day Before", "time": null, "title": "Pull bourbon baked beans from freezer", "note": "Thaw in refrigerator overnight", "recipe": "r-baked-beans"}, {"day": "Friday May 15 -- Day Before", "time": null, "title": "Make corn pudding", "note": "2 pans -- bake 350F 1 hour. Refrigerate overnight.", "recipe": "r-corn-pudding"}, {"day": "Friday May 15 -- Day Before", "time": null, "title": "Assemble mac and cheese", "note": "2 half sheet pans -- do not bake yet. Refrigerate.", "recipe": "r-mac-cheese"}, {"day": "Friday May 15 -- Day Before", "time": null, "title": "Make grapefruit rosemary syrup", "note": "Steep EXACTLY 15 min -- refrigerate", "recipe": "r-grapefruit-spritzer-may"}, {"day": "Monday May 11", "time": null, "title": "Made chicken dry rub mixture", "note": "Rub is ready -- apply to wings on Friday before Traeger start."}, {"day": "Friday May 15 -- Day Before", "time": null, "title": "Apply dry rub to wings", "note": "Season all 35 lbs -- refrigerate overnight.", "recipe": "r-dry-rub"}, {"day": "Friday May 15 -- Day Before", "time": null, "title": "Apply rub to pork butts", "note": "3 butts -- refrigerate overnight", "recipe": "r-pulled-pork"}, {"day": "Friday May 15 -- Day Before", "time": null, "title": "Fill Traeger hopper", "note": "Have backup bag ready"}, {"day": "Friday May 15 -- Day Before", "time": null, "title": "Set up non-perishable station", "note": "Cups, napkins, tongs, utensils, signage"}, {"day": "Friday May 15 -- Day Before", "time": null, "title": "Pack coolers (no ice yet)", "note": "Ice goes in Saturday morning"}, {"day": "Friday May 15 -- Day Before", "time": "22:00", "title": "Start Traeger at 225F -- fat cap UP", "note": "3 pork butts -- full hopper, runs overnight", "recipe": "r-pulled-pork"}, {"day": "Saturday May 16 -- Event Day", "time": "04:00", "title": "Check + refill pellet hopper", "note": "~6 hr mark from 10pm start"}, {"day": "Saturday May 16 -- Event Day", "time": "07:30", "title": "Add ice to coolers", "note": ""}, {"day": "Saturday May 16 -- Event Day", "time": "08:00", "title": "Mix grapefruit rosemary spritzer", "note": "Grapefruit juice + rosemary syrup + sparkling water -- stir gently", "recipe": "r-grapefruit-spritzer-may"}, {"day": "Saturday May 16 -- Event Day", "time": "09:00", "title": "Bake mac and cheese", "note": "375F 25-30 min until bubbly and golden -- add splash of milk if dry", "recipe": "r-mac-cheese"}, {"day": "Saturday May 16 -- Event Day", "time": "09:30", "title": "Reheat corn pudding", "note": "350F covered 20 min", "recipe": "r-corn-pudding"}, {"day": "Saturday May 16 -- Event Day", "time": "10:00", "title": "Bump Traeger to 250F", "note": "Monitor pork temp"}, {"day": "Saturday May 16 -- Event Day", "time": "11:00", "title": "Set up toppings bar", "note": "BBQ sauces, pickled onions, jalape\u00f1os, pickles, crispy onions, labels"}, {"day": "Saturday May 16 -- Event Day", "time": "11:30", "title": "Set up drink station", "note": "Spritzer jug, sodas, beers, ice"}, {"day": "Saturday May 16 -- Event Day", "time": "12:00", "title": "Assemble summer fruit plate", "note": "Fresh fruit only -- arrange just before service"}, {"day": "Saturday May 16 -- Event Day", "time": "12:00", "title": "Set up dessert station", "note": "Key lime pies + cheesecakes out of fridge -- toppings alongside"}, {"day": "Saturday May 16 -- Event Day", "time": "13:00", "title": "Pull pork at 203-205F", "note": "Wrap in butcher paper. Rest in cooler minimum 1-2 hrs.", "recipe": "r-pulled-pork"}, {"day": "Saturday May 16 -- Event Day", "time": "13:00", "title": "Wings on Traeger at 225F", "note": "35 lbs -- cook during pork rest", "recipe": "r-wings"}, {"day": "Saturday May 16 -- Event Day", "time": "14:00", "title": "Bump wings to 425F", "note": "20-25 min until 175-180F internal -- crisp the skin", "recipe": "r-wings"}, {"day": "Saturday May 16 -- Event Day", "time": "14:00", "title": "Reheat baked beans", "note": "Low and slow -- heat to 165F", "recipe": "r-baked-beans"}, {"day": "Saturday May 16 -- Event Day", "time": "14:30", "title": "Toss wings in Buffalo sauce", "note": "Immediately after pulling -- serve hot", "recipe": "r-wings"}, {"day": "Saturday May 16 -- Event Day", "time": "15:00", "title": "Shred pulled pork", "note": "After full rest -- pull and season", "recipe": "r-pulled-pork"}, {"day": "Saturday May 16 -- Event Day", "time": "15:30", "title": "Load all food into chafing dishes", "note": "Pork, wings, beans, mac, corn pudding"}, {"day": "Saturday May 16 -- Event Day", "time": "16:00", "title": "Final check -- all stations ready", "note": "Walk every station. Verify temps, labels, utensils, drinks."}, {"day": "Saturday May 16 -- Event Day", "time": "16:00", "title": "OPEN SERVING", "note": "4:00pm -- 50-60 guests"}];
+var MAY_TIMELINE  = [{"day": "Monday May 11", "time": null, "title": "Made chicken dry rub mixture", "note": "Rub is ready -- apply to wings on Friday before Traeger start."}, {"day": "Thursday May 14", "time": null, "title": "Make cheesecakes", "note": "2 cakes -- refrigerate. Keeps 5 days.", "recipe": "r-cheesecake"}, {"day": "Thursday May 14", "time": null, "title": "Make key lime pies", "note": "4 pies -- refrigerate. Keeps 5 days.", "recipe": "r-keylime-may"}, {"day": "Friday May 15 -- Day Before", "time": null, "title": "Pull bourbon baked beans from freezer", "note": "Thaw in refrigerator overnight", "recipe": "r-baked-beans"}, {"day": "Friday May 15 -- Day Before", "time": null, "title": "Make corn pudding", "note": "2 pans -- bake 350F 1 hour. Refrigerate overnight.", "recipe": "r-corn-pudding"}, {"day": "Friday May 15 -- Day Before", "time": null, "title": "Assemble mac and cheese", "note": "2 half sheet pans -- do not bake yet. Refrigerate.", "recipe": "r-mac-cheese"}, {"day": "Friday May 15 -- Day Before", "time": null, "title": "Make grapefruit rosemary syrup", "note": "Steep EXACTLY 15 min -- refrigerate", "recipe": "r-grapefruit-spritzer-may"}, {"day": "Friday May 15 -- Day Before", "time": null, "title": "Apply dry rub to wings", "note": "Season all 35 lbs -- refrigerate overnight.", "recipe": "r-dry-rub"}, {"day": "Friday May 15 -- Day Before", "time": null, "title": "Apply rub to pork butts", "note": "3 butts -- refrigerate overnight", "recipe": "r-pulled-pork"}, {"day": "Friday May 15 -- Day Before", "time": null, "title": "Fill Traeger hopper", "note": "Have backup bag ready"}, {"day": "Friday May 15 -- Day Before", "time": null, "title": "Set up non-perishable station", "note": "Cups, napkins, tongs, utensils, signage"}, {"day": "Friday May 15 -- Day Before", "time": null, "title": "Pack coolers (no ice yet)", "note": "Ice goes in Saturday morning"}, {"day": "Friday May 15 -- Day Before", "time": "22:00", "title": "Start Traeger at 225F -- fat cap UP", "note": "3 pork butts -- full hopper, runs overnight", "recipe": "r-pulled-pork"}, {"day": "Saturday May 16 -- Event Day", "time": "04:00", "title": "Check + refill pellet hopper", "note": "~6 hr mark from 10pm start"}, {"day": "Saturday May 16 -- Event Day", "time": "07:30", "title": "Add ice to coolers", "note": ""}, {"day": "Saturday May 16 -- Event Day", "time": "08:00", "title": "Mix grapefruit rosemary spritzer", "note": "Grapefruit juice + rosemary syrup + sparkling water -- stir gently", "recipe": "r-grapefruit-spritzer-may"}, {"day": "Saturday May 16 -- Event Day", "time": "10:00", "title": "Bump Traeger to 250F", "note": "Monitor pork temp"}, {"day": "Saturday May 16 -- Event Day", "time": "11:00", "title": "Set up toppings bar", "note": "BBQ sauces, pickled onions, jalape\u00f1os, pickles, crispy onions, labels"}, {"day": "Saturday May 16 -- Event Day", "time": "11:30", "title": "Set up drink station", "note": "Spritzer jug, sodas, beers, ice"}, {"day": "Saturday May 16 -- Event Day", "time": "12:00", "title": "Set up dessert station", "note": "Key lime pies + cheesecakes out of fridge -- toppings alongside"}, {"day": "Saturday May 16 -- Event Day", "time": "13:00", "title": "Pull pork at 203-205F", "note": "Wrap in butcher paper. Rest in cooler minimum 1-2 hrs.", "recipe": "r-pulled-pork"}, {"day": "Saturday May 16 -- Event Day", "time": "13:00", "title": "Wings on Traeger at 225F", "note": "35 lbs -- cook during pork rest", "recipe": "r-wings"}, {"day": "Saturday May 16 -- Event Day", "time": "14:00", "title": "Bump wings to 425F", "note": "20-25 min until 175-180F internal -- crisp the skin", "recipe": "r-wings"}, {"day": "Saturday May 16 -- Event Day", "time": "14:00", "title": "Load convection oven -- all 5 pans", "note": "Corn pudding (2 pans) + mac & cheese (2 pans) + baked beans (1 tray). Convection 350F, 25-30 min. Drop to 175F to hold warm until service."}, {"day": "Saturday May 16 -- Event Day", "time": "14:30", "title": "Toss wings in Buffalo sauce", "note": "Immediately after pulling -- serve hot", "recipe": "r-wings"}, {"day": "Saturday May 16 -- Event Day", "time": "15:00", "title": "Shred pulled pork", "note": "After full rest -- pull and season", "recipe": "r-pulled-pork"}, {"day": "Saturday May 16 -- Event Day", "time": "15:30", "title": "Load all food into chafing dishes", "note": "Pork, wings, beans, mac, corn pudding"}, {"day": "Saturday May 16 -- Event Day", "time": "16:00", "title": "Final check -- all stations ready", "note": "Walk every station. Verify temps, labels, utensils, drinks."}, {"day": "Saturday May 16 -- Event Day", "time": "16:00", "title": "OPEN SERVING", "note": "4:00pm -- 50-60 guests"}];
+
   var BBQ_SHOPPING  = [{"item": "Pork butts (8-10 lbs each)", "totalAmount": "4", "unit": "each", "category": "Protein", "when": "Buy Ahead", "checked": false}, {"item": "Hawaiian rolls", "totalAmount": "11", "unit": "packs", "category": "Bread", "when": "Buy Ahead", "checked": false}, {"item": "Jalapenos", "totalAmount": "3", "unit": "lbs", "category": "Produce", "when": "Buy Ahead", "checked": false}, {"item": "Apple cider vinegar", "totalAmount": "1", "unit": "gallon", "category": "Pantry", "when": "Buy Ahead", "checked": false}, {"item": "Granulated sugar", "totalAmount": "10", "unit": "lbs", "category": "Pantry", "when": "Buy Ahead", "checked": false}, {"item": "Brown sugar", "totalAmount": "5", "unit": "lbs", "category": "Pantry", "when": "Buy Ahead", "checked": false}, {"item": "Ketchup", "totalAmount": "2", "unit": "gallons", "category": "Pantry", "when": "Buy Ahead", "checked": false}, {"item": "Yellow mustard", "totalAmount": "1", "unit": "gallon", "category": "Pantry", "when": "Buy Ahead", "checked": false}, {"item": "Worcestershire sauce", "totalAmount": "1", "unit": "bottle", "category": "Pantry", "when": "Buy Ahead", "checked": false}, {"item": "Frank's hot sauce", "totalAmount": "1", "unit": "large bottle", "category": "Pantry", "when": "Buy Ahead", "checked": false}, {"item": "Baby potatoes", "totalAmount": "25", "unit": "lbs", "category": "Produce", "when": "Buy Ahead", "checked": false}, {"item": "Boiled peanuts (#10 can)", "totalAmount": "3", "unit": "cans", "category": "Canned", "when": "Buy Ahead", "checked": false}, {"item": "Cannellini beans (#10 can)", "totalAmount": "2", "unit": "cans", "category": "Canned", "when": "Buy Ahead", "checked": false}, {"item": "Black beans (#10 can)", "totalAmount": "2", "unit": "cans", "category": "Canned", "when": "Buy Ahead", "checked": false}, {"item": "Pinto beans (#10 can)", "totalAmount": "2", "unit": "cans", "category": "Canned", "when": "Buy Ahead", "checked": false}, {"item": "Thick cut bacon", "totalAmount": "3", "unit": "lbs", "category": "Protein", "when": "Buy Ahead", "checked": false}, {"item": "Heavy whipping cream", "totalAmount": "2", "unit": "quarts", "category": "Dairy", "when": "Buy Ahead", "checked": false}, {"item": "Powdered sugar", "totalAmount": "2", "unit": "lbs", "category": "Pantry", "when": "Buy Ahead", "checked": false}, {"item": "Traeger pellets", "totalAmount": "2", "unit": "bags", "category": "Supplies", "when": "Buy Ahead", "checked": false}, {"item": "Butcher paper", "totalAmount": "1", "unit": "roll", "category": "Supplies", "when": "Buy Ahead", "checked": false}, {"item": "Chafing dishes + fuel", "totalAmount": "", "unit": "", "category": "Supplies", "when": "Already Sourced", "checked": false}, {"item": "Large seedless watermelon", "totalAmount": "1", "unit": "each", "category": "Produce", "when": "Buy Fresh", "checked": false}, {"item": "Feta cheese", "totalAmount": "2", "unit": "lbs", "category": "Dairy", "when": "Buy Fresh", "checked": false}, {"item": "Fresh mint", "totalAmount": "2", "unit": "bunches", "category": "Produce", "when": "Buy Fresh", "checked": false}, {"item": "Limes", "totalAmount": "10", "unit": "each", "category": "Produce", "when": "Buy Fresh", "checked": false}, {"item": "Fresh rosemary", "totalAmount": "4", "unit": "sprigs", "category": "Produce", "when": "Buy Fresh", "checked": false}, {"item": "Pink grapefruit juice", "totalAmount": "1", "unit": "liter", "category": "Beverages", "when": "Buy Fresh", "checked": false}, {"item": "Sparkling water", "totalAmount": "3", "unit": "liters", "category": "Beverages", "when": "Buy Fresh", "checked": false}, {"item": "Lavender simple syrup", "totalAmount": "1", "unit": "batch", "category": "Beverages", "when": "Already Sourced", "checked": false}, {"item": "Butterfly pea flowers", "totalAmount": "", "unit": "", "category": "Pantry", "when": "Already Sourced", "checked": false}, {"item": "ISI whipping canister", "totalAmount": "1", "unit": "each", "category": "Supplies", "when": "Already Sourced", "checked": false}, {"item": "N2O cartridges", "totalAmount": "6", "unit": "each", "category": "Supplies", "when": "Already Sourced", "checked": false}, {"item": "Nellie & Joe's Key Lime Juice", "totalAmount": "2", "unit": "cups", "category": "Pantry", "when": "Buy Ahead", "checked": false}, {"item": "Sweetened condensed milk", "totalAmount": "4", "unit": "cans", "category": "Canned", "when": "Buy Ahead", "checked": false}, {"item": "Graham cracker crusts", "totalAmount": "4", "unit": "each", "category": "Pantry", "when": "Buy Ahead", "checked": false}];
   var MAY_SHOPPING  = [{"item": "Pork butts (8-10 lbs each)", "totalAmount": "3", "unit": "each", "category": "Protein", "when": "Buy Ahead", "id": "m17529213", "checked": false}, {"item": "Chicken wings", "totalAmount": "35", "unit": "lbs", "category": "Protein", "when": "Buy Ahead", "id": "m91303741", "checked": false}, {"item": "Philadelphia cream cheese", "totalAmount": "8", "unit": "packages (8oz)", "category": "Dairy & Eggs", "when": "Buy Ahead", "id": "m78487407", "checked": false}, {"item": "Sweetened condensed milk", "totalAmount": "4", "unit": "cans (14oz)", "category": "Dry Goods", "when": "Buy Ahead", "id": "m52230370", "checked": false}, {"item": "Eggs -- large", "totalAmount": "24", "unit": "each", "category": "Dairy & Eggs", "when": "Buy Ahead", "id": "m10764126", "checked": false}, {"item": "Sour cream", "totalAmount": "24", "unit": "oz", "category": "Dairy & Eggs", "when": "Buy Ahead", "id": "m62321298", "checked": false}, {"item": "Heavy whipping cream", "totalAmount": "2", "unit": "quarts", "category": "Dairy & Eggs", "when": "Buy Ahead", "id": "m80924670", "checked": false}, {"item": "Butter -- unsalted", "totalAmount": "2", "unit": "lbs", "category": "Dairy & Eggs", "when": "Buy Ahead", "id": "m37952917", "checked": false}, {"item": "Graham cracker crusts (9-inch)", "totalAmount": "4", "unit": "each", "category": "Dry Goods", "when": "Buy Ahead", "id": "m72732233", "checked": false}, {"item": "Graham crackers (for cheesecake crust)", "totalAmount": "4", "unit": "cups crushed", "category": "Dry Goods", "when": "Buy Ahead", "id": "m40547091", "checked": false}, {"item": "Elbow macaroni", "totalAmount": "3", "unit": "lbs", "category": "Dry Goods", "when": "Buy Ahead", "id": "m88908245", "checked": false}, {"item": "Sharp cheddar -- block (grate yourself)", "totalAmount": "3", "unit": "lbs", "category": "Dairy & Eggs", "when": "Buy Ahead", "id": "m70407730", "checked": false}, {"item": "Gruyere or Monterey Jack", "totalAmount": "1", "unit": "lb", "category": "Dairy & Eggs", "when": "Buy Ahead", "id": "m41795837", "checked": false}, {"item": "Half and half", "totalAmount": "1", "unit": "quart", "category": "Dairy & Eggs", "when": "Buy Ahead", "id": "m24987103", "checked": false}, {"item": "Whole milk", "totalAmount": "2", "unit": "quarts", "category": "Dairy & Eggs", "when": "Buy Ahead", "id": "m27614455", "checked": false}, {"item": "Flour -- all purpose", "totalAmount": "1", "unit": "bag", "category": "Dry Goods", "when": "Buy Ahead", "id": "m42457303", "checked": false}, {"item": "Panko breadcrumbs", "totalAmount": "1", "unit": "cup", "category": "Dry Goods", "when": "Buy Ahead", "id": "m17378226", "checked": false}, {"item": "Jiffy corn muffin mix", "totalAmount": "3", "unit": "boxes", "category": "Dry Goods", "when": "Buy Ahead", "id": "m85436229", "checked": false}, {"item": "Canned whole kernel corn", "totalAmount": "3", "unit": "cans", "category": "Canned", "when": "Buy Ahead", "id": "m10784869", "checked": false}, {"item": "Canned creamed corn", "totalAmount": "3", "unit": "cans", "category": "Canned", "when": "Buy Ahead", "id": "m10277093", "checked": false}, {"item": "Nellie & Joe's Key Lime Juice", "totalAmount": "2", "unit": "cups", "category": "Beverages", "when": "Buy Ahead", "id": "m88338243", "checked": false}, {"item": "Pink grapefruit juice", "totalAmount": "1", "unit": "liter", "category": "Beverages", "when": "Buy Ahead", "id": "m53476113", "checked": false}, {"item": "Frank's hot sauce", "totalAmount": "1.5", "unit": "cups", "category": "Dry Goods", "when": "Buy Ahead", "id": "m16670055", "checked": false}, {"item": "White vinegar", "totalAmount": "0.75", "unit": "cup", "category": "Dry Goods", "when": "Buy Ahead", "id": "m56546174", "checked": false}, {"item": "Cherry pie filling", "totalAmount": "1", "unit": "can", "category": "Canned", "when": "Buy Ahead", "id": "m85369087", "checked": false}, {"item": "Powdered sugar", "totalAmount": "1", "unit": "bag", "category": "Dry Goods", "when": "Buy Ahead", "id": "m36669376", "checked": false}, {"item": "Vanilla extract", "totalAmount": "1", "unit": "bottle", "category": "Dry Goods", "when": "Buy Ahead", "id": "m40072463", "checked": false}, {"item": "Traeger pellets", "totalAmount": "2", "unit": "bags", "category": "Supplies", "when": "Buy Ahead", "id": "m81419649", "checked": false}, {"item": "Butcher paper", "totalAmount": "1", "unit": "roll", "category": "Supplies", "when": "Buy Ahead", "id": "m41791045", "checked": false}, {"item": "Sparkling water", "totalAmount": "2", "unit": "liters", "category": "Beverages", "when": "Buy Fresh", "id": "m76890394", "checked": false}, {"item": "Fresh rosemary", "totalAmount": "6", "unit": "sprigs", "category": "Produce", "when": "Buy Fresh", "id": "m43448551", "checked": false}, {"item": "Fresh strawberries", "totalAmount": "2", "unit": "pints", "category": "Produce", "when": "Buy Fresh", "id": "m11673192", "checked": false}, {"item": "Fresh blueberries", "totalAmount": "2", "unit": "pints", "category": "Produce", "when": "Buy Fresh", "id": "m41947735", "checked": false}, {"item": "Fresh fruit for platter", "totalAmount": "", "unit": "assorted", "category": "Produce", "when": "Buy Fresh", "id": "m59006060", "checked": false}, {"item": "Limes (garnish)", "totalAmount": "4", "unit": "each", "category": "Produce", "when": "Buy Fresh", "id": "m34676020", "checked": false}, {"item": "Sodas", "totalAmount": "", "unit": "assorted", "category": "Beverages", "when": "Buy Fresh", "id": "m15104415", "checked": false}, {"item": "Beer", "totalAmount": "", "unit": "assorted", "category": "Beverages", "when": "Buy Fresh", "id": "m49055187", "checked": false}, {"item": "Butterfly pea flowers", "totalAmount": "", "unit": "", "category": "Dry Goods", "when": "Already Sourced", "id": "m37654381", "checked": false}, {"item": "Bourbon baked beans (frozen)", "totalAmount": "", "unit": "", "category": "Freezer", "when": "Already Sourced", "id": "m32972172", "checked": false}, {"item": "BBQ sauces (KC, SC, NC)", "totalAmount": "", "unit": "", "category": "Dry Goods", "when": "Already Sourced", "id": "m77550587", "checked": false}, {"item": "Leftover toppings bar items", "totalAmount": "", "unit": "", "category": "Supplies", "when": "Already Sourced", "id": "m57760857", "checked": false}, {"item": "Chafing dishes + fuel", "totalAmount": "", "unit": "", "category": "Supplies", "when": "Already Sourced", "id": "m71420763", "checked": false}];
 
@@ -1965,15 +2032,16 @@ function seedData() {
     }
   ];
 
+  sortEventTimelines(events);
   saveEvents();
-
-  // Pre-mark all BBQ tasks complete (event is done)
   var bbqState = {};
   BBQ_TIMELINE.forEach(function(_, i){ bbqState[i] = true; });
-  // Save ONLY to BBQ's own key
-  localStorage.setItem('ev_state_' + bbqId, JSON.stringify(bbqState));
+  localStorage.setItem('cp_ev_STATE_' + bbqId, JSON.stringify(bbqState));
 
-  // May 16 starts empty -- nothing to save
+  // Pre-mark Monday rub task done for May event
+  var mayState = {};
+  MAY_TIMELINE.forEach(function(t, i){ if (t.title === 'Made chicken dry rub mixture') mayState[i] = true; });
+  localStorage.setItem('cp_ev_STATE_' + mayId, JSON.stringify(mayState));
 
   activeEventIdx = 1; // Start on May 16
   localStorage.setItem('cp_active_event', '1');
