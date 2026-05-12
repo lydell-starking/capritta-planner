@@ -1604,6 +1604,7 @@ function importEvent() {
     id: uid(),
     name: data.name, date: data.date,
     time: data.time||'17:00', guests: data.guests||0, venue: data.venue||'',
+    address: data.address||'', inviteHighlight: data.inviteHighlight||'',
     timeline: (data.timeline||[]).map(function(t){ return Object.assign({},t,{done:false}); }),
     shoppingList: (data.shoppingList||[]).map(function(i){ return Object.assign({id:uid(),checked:false},i); }),
     menu: data.menu || []
