@@ -1825,7 +1825,7 @@ if (window.location.search.indexOf('clearall=1') !== -1) {
 
 // ── Seed Data ─────────────────────────────────────────────────
 function seedData() {
-  if (localStorage.getItem('cp_seeded')) return;
+  if (localStorage.getItem('cp_seeded_v3')) return;
 
   var bbqId  = uid();
   var mayId  = uid();
@@ -2058,7 +2058,7 @@ function seedData() {
   ];
   mayRecipes.forEach(function(r){ if(!recipes.find(function(x){return x.id===r.id;})) recipes.push(r); });
   saveRecipes();
-  localStorage.setItem('cp_seeded', '1');
+  localStorage.setItem('cp_seeded_v3', '1');
 }
 
 
