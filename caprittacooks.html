@@ -1540,8 +1540,6 @@ function openEvOverlay() {
         '<div style="flex:1">'+status+'</div>' +
         (ev.menu && ev.menu.length ? '<button onclick="event.stopPropagation();openMenu('+i+')" style="background:none;border:1px solid #c9a84c;color:#c9a84c;font-family:\'IBM Plex Mono\',monospace;font-size:0.58rem;padding:4px 10px;border-radius:2px;cursor:pointer;white-space:nowrap;flex-shrink:0;margin-left:8px">Menu</button>' : '') +
         (ev.inviteHighlight && ev.address ? '<button onclick="event.stopPropagation();openInvite('+i+')" style="background:none;border:1px solid var(--sky);color:var(--sky);font-family:\'IBM Plex Mono\',monospace;font-size:0.58rem;padding:4px 10px;border-radius:2px;cursor:pointer;white-space:nowrap;flex-shrink:0;margin-left:8px">Invite</button>' : '') +
-        '<button onclick="event.stopPropagation();deleteEvent('+i+')" style="background:none;border:1px solid #5a2a2a;color:#f87171;font-family:\'IBM Plex Mono\',monospace;font-size:0.58rem;padding:4px 10px;border-radius:2px;cursor:pointer;white-space:nowrap;flex-shrink:0;margin-left:8px">Delete</button>' +
-        '<button onclick="event.stopPropagation();exportEvent('+i+')" style="background:none;border:1px solid #4a9a6a;color:#52be80;font-family:\'IBM Plex Mono\',monospace;font-size:0.58rem;padding:4px 10px;border-radius:2px;cursor:pointer;white-space:nowrap;flex-shrink:0;margin-left:8px">Export</button>' +
         '</div>' +
 
         '</div>';
@@ -1592,42 +1590,6 @@ function evLpStart(e, i) {
 }
 function evLpCancel() { if (evLpTimer) { clearTimeout(evLpTimer); evLpTimer = null; } }
 
-
-function exportEvent(i) {
-  var ev = events[i];
-  if (!ev) return;
-  var exportData = {
-    name: ev.name,
-    date: ev.date,
-    time: ev.time || '17:00',
-    guests: ev.guests || 0,
-    venue: ev.venue || '',
-    address: ev.address || '',
-    inviteHighlight: ev.inviteHighlight || '',
-    timeline: (ev.timeline || []).map(function(t) {
-      var copy = Object.assign({}, t);
-      delete copy.done;
-      return copy;
-    }),
-    shoppingList: (ev.shoppingList || []).map(function(s) {
-      var copy = Object.assign({}, s);
-      delete copy.id;
-      delete copy.checked;
-      return copy;
-    }),
-    menu: ev.menu || [],
-    recipes: (recipes || []).filter(function(r) {
-      return (ev.timeline || []).some(function(t) { return t.recipe === r.id; });
-    })
-  };
-  var blob = new Blob([JSON.stringify(exportData, null, 2)], {type: 'application/json'});
-  var url = URL.createObjectURL(blob);
-  var a = document.createElement('a');
-  a.href = url;
-  a.download = ev.name.replace(/[^a-z0-9]/gi, '-').toLowerCase() + '.json';
-  a.click();
-  URL.revokeObjectURL(url);
-}
 
 function deleteEvent(i) {
   var ev = events[i];
@@ -1712,7 +1674,6 @@ function importEvent() {
     id: uid(),
     name: data.name, date: data.date,
     time: data.time||'17:00', guests: data.guests||0, venue: data.venue||'',
-    address: data.address||'', inviteHighlight: data.inviteHighlight||'',
     timeline: (data.timeline||[]).map(function(t){ return Object.assign({},t,{done:false}); }),
     shoppingList: (data.shoppingList||[]).map(function(i){ return Object.assign({id:uid(),checked:false},i); }),
     menu: data.menu || []
