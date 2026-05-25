@@ -265,7 +265,7 @@ body{background:var(--navy);color:var(--cream);font-family:'IBM Plex Mono',monos
 <div class="offline-badge" id="offline-badge">OFFLINE</div>
 <header class="app-header">
   <div class="app-header-top">
-    <div class="app-title"><span>C</span>AP<span>C</span>OOKS</div>
+    <div class="app-title"><span>C</span>AP<span>C</span>OOKS <span style="font-size:0.45em;color:var(--muted);letter-spacing:0.05em;vertical-align:middle" id="app-ver"></span></div>
     <div class="app-event-name" onclick="openEvOverlay()" id="active-event-name">LOADING</div>
   </div>
   <div class="progress-wrap"><div class="progress-fill" id="progress-fill" style="width:0%"></div></div>
@@ -507,6 +507,8 @@ body{background:var(--navy);color:var(--cream);font-family:'IBM Plex Mono',monos
 //   cp_seeded              = seed guard
 //   cp_api_key             = Anthropic API key
 // ═══════════════════════════════════════════════════════════
+
+var APP_VERSION = '1.5';
 
 var events  = JSON.parse(localStorage.getItem('cp_events')  || '[]');
 var recipes = JSON.parse(localStorage.getItem('cp_recipes') || '[]');
@@ -1991,7 +1993,7 @@ if (window.location.search.indexOf('clearall=1') !== -1) {
 
 // ── Seed Data ─────────────────────────────────────────────────
 function seedData() {
-  if (localStorage.getItem('cp_seeded_v4')) return;
+  if (localStorage.getItem('cp_seeded_v5')) return;
 
   var bbqId  = uid();
   var mayId  = uid();
@@ -2012,6 +2014,7 @@ var MAY_TIMELINE  = [{"day": "Monday May 11", "time": null, "title": "Made chick
       name: 'Capritta Elevated Bar B Q',
       date: '2026-04-22', time: '17:00', guests: 125,
       venue: 'West Melbourne FL',
+      archived: true,
       timeline: BBQ_TIMELINE,
       shoppingList: BBQ_SHOPPING,
       menu: [
@@ -2036,6 +2039,7 @@ var MAY_TIMELINE  = [{"day": "Monday May 11", "time": null, "title": "Made chick
       date: '2026-05-16', time: '16:00', guests: 60,
       venue: 'Backyard -- West Melbourne FL',
       address: 'West Melbourne, FL',
+      archived: true,
       inviteHighlight: 'Pulled Pork \u00b7 Buffalo Wings \u00b7 Mac & Cheese',
       timeline: MAY_TIMELINE,
       shoppingList: MAY_SHOPPING,
@@ -2335,7 +2339,7 @@ var MAY_TIMELINE  = [{"day": "Monday May 11", "time": null, "title": "Made chick
 
   sortEventTimelines(events);
   saveEvents();
-  localStorage.setItem('cp_seeded_v4', '1');
+  localStorage.setItem('cp_seeded_v5', '1');
 }
 
 
@@ -2358,6 +2362,7 @@ var MAY_TIMELINE  = [{"day": "Monday May 11", "time": null, "title": "Made chick
 
 // ── Init ─────────────────────────────────────────────────────
 seedData();
+document.getElementById('app-ver').textContent = 'v' + APP_VERSION;
 activeEventIdx = parseInt(localStorage.getItem('cp_active_event') || '1');
 if (activeEventIdx >= events.length) activeEventIdx = 0;
 renderChecklist();
