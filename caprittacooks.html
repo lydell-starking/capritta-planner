@@ -366,6 +366,7 @@ body{background:var(--navy);color:var(--cream);font-family:'IBM Plex Mono',monos
   <div id="ev-list" style="display:flex;flex-direction:column;gap:8px;margin-bottom:20px"></div>
   <button class="btn-gold" style="width:100%;padding:12px;font-size:1rem;margin-bottom:8px" onclick="newEventViaChat()">+ Plan New Event with Chef</button>
   <button onclick="document.getElementById('ev-overlay').classList.remove('open');document.getElementById('import-overlay').classList.add('open')" style="width:100%;padding:12px;font-size:1rem;margin-bottom:10px;background:none;border:1px solid var(--gold);color:var(--gold);font-family:'Bebas Neue',sans-serif;letter-spacing:0.08em;border-radius:2px;cursor:pointer">&#8659; Import from Chef JSON</button>
+  <button onclick="exportActiveEvent()" style="width:100%;padding:12px;font-size:1rem;margin-bottom:10px;background:none;border:1px solid var(--sky);color:var(--sky);font-family:'Bebas Neue',sans-serif;letter-spacing:0.08em;border-radius:2px;cursor:pointer">&#8679; Export Current Event JSON</button>
   <button class="btn-ghost" style="display:block;margin:0 auto" onclick="closeEvOverlay()">Close</button>
 </div>
 
@@ -482,7 +483,7 @@ body{background:var(--navy);color:var(--cream);font-family:'IBM Plex Mono',monos
     </div>
   </div>
   <div id="invite-card" style="background:#0a1628;padding:40px 32px;border-radius:4px;text-align:center">
-    <div style="font-family:'Bebas Neue',sans-serif;font-size:0.8rem;letter-spacing:0.18em;color:#c9a84c;margin-bottom:24px">CAPRITTA FINE APPLIANCE &amp; AIR CONDITIONING</div>
+    <div style="font-family:'Bebas Neue',sans-serif;font-size:0.8rem;letter-spacing:0.18em;color:#c9a84c;margin-bottom:24px">CAPRITTA APPLIANCE &amp; AIR CONDITIONING</div>
     <div style="font-family:'Bebas Neue',sans-serif;font-size:2.2rem;letter-spacing:0.1em;color:#f4f0e6;line-height:1.1;margin-bottom:8px" id="invite-name"></div>
     <div style="font-size:0.72rem;color:#5b9bd5;letter-spacing:0.12em;margin-bottom:24px" id="invite-datetime"></div>
     <div style="height:1px;background:linear-gradient(90deg,transparent,#c9a84c,transparent);margin-bottom:24px"></div>
@@ -1652,6 +1653,22 @@ function newEventViaChat() {
   appendMsg('chef', "Let's plan a new event. Tell me: <strong>what is the event, when is it, and how many guests?</strong>");
 }
 
+// ── Export Event ─────────────────────────────────────────────
+function exportActiveEvent() {
+  var ev = events[activeEventIdx];
+  if (!ev) return;
+  var json = JSON.stringify(ev, null, 2);
+  var blob = new Blob([json], {type: 'application/json'});
+  var url = URL.createObjectURL(blob);
+  var a = document.createElement('a');
+  var slug = ev.name.toLowerCase().replace(/[^a-z0-9]+/g,'-').replace(/^-|-$/g,'');
+  a.href = url;
+  a.download = 'capcooks-' + slug + '.json';
+  a.click();
+  setTimeout(function(){ URL.revokeObjectURL(url); }, 1000);
+  closeEvOverlay();
+}
+
 // ── Import Event ─────────────────────────────────────────────
 function importEvent() {
   var raw = document.getElementById('import-json').value
@@ -1974,7 +1991,7 @@ if (window.location.search.indexOf('clearall=1') !== -1) {
 
 // ── Seed Data ─────────────────────────────────────────────────
 function seedData() {
-  if (localStorage.getItem('cp_seeded_v3')) return;
+  if (localStorage.getItem('cp_seeded_v4')) return;
 
   var bbqId  = uid();
   var mayId  = uid();
@@ -2236,7 +2253,89 @@ var MAY_TIMELINE  = [{"day": "Monday May 11", "time": null, "title": "Made chick
   ];
   mayRecipes.forEach(function(r){ if(!recipes.find(function(x){return x.id===r.id;})) recipes.push(r); });
   saveRecipes();
-  localStorage.setItem('cp_seeded_v3', '1');
+
+  // ── Beach Bash 2026 ───────────────────────────────────────────
+  var bashId = uid();
+
+  var BASH_TIMELINE = [
+    {"day":"Friday May 29","time":null,"title":"Sam's Club shopping run","note":"Buy everything on the Sam's list in one trip"},
+    {"day":"Friday May 29","time":null,"title":"Fill large drink cooler","note":"Layer drinks -- bottled water, sports drinks, Capri Sun. Top with ice. Lid closed overnight."},
+    {"day":"Friday May 29","time":null,"title":"Prep condiment bar containers","note":"Portion ketchup, mustard, mayo into squeeze bottles. Pre-slice tomato and onion into containers. Refrigerate."},
+    {"day":"Saturday May 30","time":"08:00","title":"Load car / truck","note":"Cooler, griddle, propane, condiment tubs, serving supplies, paper goods"},
+    {"day":"Saturday May 30","time":"09:00","title":"Arrive at South Pavilion -- set up","note":"2301 N. Highway A1A, Melbourne FL 32903. Claim pavilion, lay out tables, set condiment bar and fruit station"},
+    {"day":"Saturday May 30","time":"09:30","title":"Blue Rhino Griddle on -- preheat","note":"Season griddle surface. Get to temp before first proteins go on."},
+    {"day":"Saturday May 30","time":"09:45","title":"Open snack station","note":"Goldfish and trail mix out on table. Chips displayed."},
+    {"day":"Saturday May 30","time":"10:00","title":"Start cooking burgers and hot dogs","note":"Burgers first -- Italian sausage links take longest, start those too"},
+    {"day":"Saturday May 30","time":"10:30","title":"Italian sausage links on griddle","note":"Cook through to 160F internal -- allow 20-25 min"},
+    {"day":"Saturday May 30","time":"10:45","title":"Set out pre-made sides","note":"Coleslaw, potato salad in serving bowls with ice underneath if possible"},
+    {"day":"Saturday May 30","time":"11:00","title":"OPEN SERVING","note":"11:00 AM -- ~50 guests. Keep griddle running for continuous cook."},
+    {"day":"Saturday May 30","time":"13:00","title":"Check protein levels -- restock griddle","note":"Keep burgers and dogs coming as needed"},
+    {"day":"Saturday May 30","time":"14:00","title":"Set out desserts","note":"Cookie trays open"},
+    {"day":"Saturday May 30","time":"15:00","title":"Begin breakdown","note":"Pack cooler, wrap leftovers, wipe griddle, collect trash"}
+  ];
+
+  var BASH_SHOPPING = [
+    {id:uid(),category:"Sam's Club -- Proteins",item:"80/20 ground beef patties",qty:"60 count (pre-formed)",checked:false},
+    {id:uid(),category:"Sam's Club -- Proteins",item:"Hot dogs",qty:"60 count",checked:false},
+    {id:uid(),category:"Sam's Club -- Proteins",item:"Italian sausage links",qty:"30 count",checked:false},
+    {id:uid(),category:"Sam's Club -- Buns",item:"Hamburger buns",qty:"60 count (5 packs of 12)",checked:false},
+    {id:uid(),category:"Sam's Club -- Buns",item:"Hot dog buns",qty:"60 count (5 packs of 12)",checked:false},
+    {id:uid(),category:"Sam's Club -- Buns",item:"Hoagie / sausage rolls",qty:"30 count",checked:false},
+    {id:uid(),category:"Sam's Club -- Sides",item:"Pre-made coleslaw (deli)",qty:"5 lb container x2",checked:false},
+    {id:uid(),category:"Sam's Club -- Sides",item:"Pre-made potato salad (deli)",qty:"5 lb container x2",checked:false},
+    {id:uid(),category:"Sam's Club -- Sides",item:"Assorted chips variety pack",qty:"1 large pack",checked:false},
+    {id:uid(),category:"Sam's Club -- Fruit",item:"Pre-cut fresh fruit tray",qty:"2 large trays (watermelon, grapes, seasonal)",checked:false},
+    {id:uid(),category:"Sam's Club -- Snacks",item:"Goldfish crackers",qty:"1 large bag",checked:false},
+    {id:uid(),category:"Sam's Club -- Snacks",item:"Assorted trail mix",qty:"1 large bag",checked:false},
+    {id:uid(),category:"Sam's Club -- Dessert",item:"Bakery cookie tray",qty:"2 trays (~50 servings)",checked:false},
+    {id:uid(),category:"Sam's Club -- Drinks",item:"Bottled water",qty:"2 cases (40 count)",checked:false},
+    {id:uid(),category:"Sam's Club -- Drinks",item:"Gatorade / sports drinks variety",qty:"2 packs (28-32 count)",checked:false},
+    {id:uid(),category:"Sam's Club -- Drinks",item:"Capri Sun",qty:"1 pack (40 count)",checked:false},
+    {id:uid(),category:"Sam's Club -- Condiments",item:"Ketchup",qty:"2 large squeeze bottles",checked:false},
+    {id:uid(),category:"Sam's Club -- Condiments",item:"Yellow mustard",qty:"2 large squeeze bottles",checked:false},
+    {id:uid(),category:"Sam's Club -- Condiments",item:"Mayonnaise",qty:"1 large jar",checked:false},
+    {id:uid(),category:"Sam's Club -- Condiments",item:"Dill pickle slices",qty:"1 large jar",checked:false},
+    {id:uid(),category:"Sam's Club -- Condiments",item:"Relish",qty:"1 jar",checked:false},
+    {id:uid(),category:"Sam's Club -- Condiments",item:"American cheese slices",qty:"2 packs (48 count)",checked:false},
+    {id:uid(),category:"Sam's Club -- Produce",item:"Roma tomatoes",qty:"10-12 (slice day before)",checked:false},
+    {id:uid(),category:"Sam's Club -- Produce",item:"Iceberg lettuce",qty:"2 heads",checked:false},
+    {id:uid(),category:"Sam's Club -- Produce",item:"Yellow onions",qty:"3 large (chop day before)",checked:false},
+    {id:uid(),category:"Sam's Club -- Supplies",item:"Paper plates (large)",qty:"100 count",checked:false},
+    {id:uid(),category:"Sam's Club -- Supplies",item:"Napkins",qty:"200 count",checked:false},
+    {id:uid(),category:"Sam's Club -- Supplies",item:"Plastic forks and knives",qty:"100 count",checked:false},
+    {id:uid(),category:"Sam's Club -- Supplies",item:"Serving tongs",qty:"4-6 pair",checked:false},
+    {id:uid(),category:"Sam's Club -- Supplies",item:"Aluminum serving trays",qty:"10-12 count",checked:false},
+    {id:uid(),category:"Sam's Club -- Ice",item:"Bag ice",qty:"4 bags (20 lb each)",checked:false}
+  ];
+
+  events.push({
+    id: bashId,
+    name: 'Beach Bash 2026',
+    date: '2026-05-30', time: '11:00', guests: 50,
+    venue: 'South Pavilion -- 2301 N. Highway A1A, Melbourne FL 32903',
+    address: '2301 N. Highway A1A, Melbourne, FL 32903 — South Pavilion',
+    inviteHighlight: 'Burgers \u00b7 Hot Dogs \u00b7 Italian Sausage \u00b7 Bring the Family!',
+    timeline: BASH_TIMELINE,
+    shoppingList: BASH_SHOPPING,
+    menu: [
+      {section:'Snacks', item:'Goldfish & Assorted Trail Mix', description:''},
+      {section:'Mains', item:'Burgers', description:'Griddle-cooked beef patties on fresh buns'},
+      {section:'Mains', item:'Hot Dogs', description:'Griddled hot dogs on buns'},
+      {section:'Mains', item:'Italian Sausage Links', description:'Griddled sausage on fresh rolls'},
+      {section:'Sides', item:'Coleslaw', description:'Pre-made tangy coleslaw'},
+      {section:'Sides', item:'Potato Salad', description:'Pre-made creamy potato salad'},
+      {section:'Sides', item:'Chips', description:'Assorted bags'},
+      {section:'Fruit', item:'Fresh Fruit', description:'Watermelon, grapes, bananas + seasonal finds'},
+      {section:'Desserts', item:'Cookies & More', description:'Bakery cookie trays'},
+      {section:'Drinks', item:'Bottled Water', description:''},
+      {section:'Drinks', item:'Assorted Sports Drinks & Capri Sun', description:''},
+      {section:'Condiment Bar', item:'Full Toppings Bar', description:'Ketchup \u00b7 Mustard \u00b7 Mayo \u00b7 Pickles \u00b7 Relish \u00b7 Tomato \u00b7 Lettuce \u00b7 Onions \u00b7 Cheese'}
+    ]
+  });
+
+  sortEventTimelines(events);
+  saveEvents();
+  localStorage.setItem('cp_seeded_v4', '1');
 }
 
 
