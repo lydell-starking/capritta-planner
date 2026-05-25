@@ -367,6 +367,7 @@ body{background:var(--navy);color:var(--cream);font-family:'IBM Plex Mono',monos
   <button class="btn-gold" style="width:100%;padding:12px;font-size:1rem;margin-bottom:8px" onclick="newEventViaChat()">+ Plan New Event with Chef</button>
   <button onclick="document.getElementById('ev-overlay').classList.remove('open');document.getElementById('import-overlay').classList.add('open')" style="width:100%;padding:12px;font-size:1rem;margin-bottom:10px;background:none;border:1px solid var(--gold);color:var(--gold);font-family:'Bebas Neue',sans-serif;letter-spacing:0.08em;border-radius:2px;cursor:pointer">&#8659; Import from Chef JSON</button>
   <button onclick="exportActiveEvent()" style="width:100%;padding:12px;font-size:1rem;margin-bottom:10px;background:none;border:1px solid var(--sky);color:var(--sky);font-family:'Bebas Neue',sans-serif;letter-spacing:0.08em;border-radius:2px;cursor:pointer">&#8679; Export Current Event JSON</button>
+  <button onclick="forceRefresh()" style="width:100%;padding:12px;font-size:1rem;margin-bottom:10px;background:none;border:1px solid var(--muted);color:var(--muted);font-family:'Bebas Neue',sans-serif;letter-spacing:0.08em;border-radius:2px;cursor:pointer">&#8635; Force Refresh App</button>
   <button class="btn-ghost" style="display:block;margin:0 auto" onclick="closeEvOverlay()">Close</button>
 </div>
 
@@ -508,7 +509,7 @@ body{background:var(--navy);color:var(--cream);font-family:'IBM Plex Mono',monos
 //   cp_api_key             = Anthropic API key
 // ═══════════════════════════════════════════════════════════
 
-var APP_VERSION = '1.5';
+var APP_VERSION = '1.6';
 
 var events  = JSON.parse(localStorage.getItem('cp_events')  || '[]');
 var recipes = JSON.parse(localStorage.getItem('cp_recipes') || '[]');
@@ -1653,6 +1654,13 @@ function newEventViaChat() {
   closeEvOverlay();
   showTab('chef', document.getElementById('nav-chef'));
   appendMsg('chef', "Let's plan a new event. Tell me: <strong>what is the event, when is it, and how many guests?</strong>");
+}
+
+// ── Force Refresh ─────────────────────────────────────────────
+function forceRefresh() {
+  if (!confirm('Reload the latest version from GitHub?\n\nYour events and data will not be affected.')) return;
+  var url = window.location.href.split('?')[0] + '?v=' + Date.now();
+  window.location.replace(url);
 }
 
 // ── Export Event ─────────────────────────────────────────────
