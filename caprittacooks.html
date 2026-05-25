@@ -108,8 +108,8 @@ body{background:var(--navy);color:var(--cream);font-family:'IBM Plex Mono',monos
   border-left-color:transparent;opacity:0.35;padding-top:4px;padding-bottom:4px}
 .shop-item.checked .shop-item-name{text-decoration:line-through;color:var(--sky);font-size:0.75rem}
 .shop-item.checked .shop-item-amt{display:none}
-.shop-item-name{flex:1;font-size:0.875rem;font-weight:500}
-.shop-item-amt{font-size:0.72rem;color:var(--muted);white-space:nowrap}
+.shop-item-name{font-size:0.875rem;font-weight:500;display:block}
+.shop-item-amt{font-size:0.72rem;color:var(--muted);margin-top:2px;display:block}
 .shop-when{font-size:0.55rem;letter-spacing:0.08em;text-transform:uppercase;
   padding:1px 6px;border-radius:2px;white-space:nowrap;cursor:pointer}
 .when-ahead{background:#2a1f0a;color:var(--gold);border:1px solid var(--gold)}
@@ -509,7 +509,7 @@ body{background:var(--navy);color:var(--cream);font-family:'IBM Plex Mono',monos
 //   cp_api_key             = Anthropic API key
 // ═══════════════════════════════════════════════════════════
 
-var APP_VERSION = '1.61';
+var APP_VERSION = '1.62';
 
 var events  = JSON.parse(localStorage.getItem('cp_events')  || '[]');
 var recipes = JSON.parse(localStorage.getItem('cp_recipes') || '[]');
@@ -1048,8 +1048,8 @@ function renderShopping() {
       html += '<div class="shop-item' + (item.checked?' checked':'') + '" id="shop-' + item.id + '">' +
         '<div class="cb" ' + cbS + ' onclick="toggleShopItem(\'' + item.id + '\')" ontouchstart="shopSwipeStart(event,\'' + item.id + '\')" ontouchmove="shopSwipeMove(event,\'' + item.id + '\')" ontouchend="shopSwipeEnd(event,\'' + item.id + '\')">' +
         '<span class="ck" ' + ckS + '>&#10003;</span></div>' +
-        '<span class="shop-item-name">' + escH(item.item) + '</span>' +
-        (amt ? '<span class="shop-item-amt">' + escH(amt) + '</span>' : '') +
+        '<div style="flex:1;min-width:0"><span class="shop-item-name">' + escH(item.item) + '</span>' +
+        (amt ? '<div class="shop-item-amt">' + escH(amt) + '</div>' : '') + '</div>' +
         '<span class="shop-when ' + wc + '" onclick="changeShopCat(\'' + item.id + '\',event)" title="tap to change">' + wl + ' &#8635;</span></div>';
     });
   });
